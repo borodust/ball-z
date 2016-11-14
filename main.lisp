@@ -21,16 +21,16 @@
   (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d))
     (setf w (lambda (s)
               (let ((cam (node s :camera)))
-                (look-down cam 0.1)))
+                (pitch-camera cam -0.1)))
           a (lambda (s)
               (let ((cam (node s :camera)))
-                (move-left cam 0.1)))
+                (move-camera cam -0.1)))
           s (lambda (s)
               (let ((cam (node s :camera)))
-                (look-up cam 0.1)))
+                (pitch-camera cam 0.1)))
           d (lambda (s)
               (let ((cam (node s :camera)))
-                (move-right cam 0.1))))))
+                (move-camera cam 0.1))))))
 
 
 (defmethod initialize-system :after ((this ball-z))
@@ -40,7 +40,6 @@
           (events (engine-system 'event-system)))
       (setf keymap (make-default-keymap))
 
-
       (when-all ((-> host
                    (setf (viewport-title host) "Ball-Z")))
         (subscribe-with-handler-body-to viewport-hiding-event () events
@@ -48,12 +47,18 @@
             (shutdown)
             (log:debug "Ball-Z stopped")
             (open-latch *main-latch*)))
-        (let ((scene (make-main-scene)))
+        (let* ((scene (make-main-scene))
+               (cam (node scene :camera)))
           (subscribe-with-handler-body-to keyboard-event (ev) events
             (ge.util:with-hash-entries ((key-fn (key-from ev))) keymap
               (let ((fn key-fn))
                 (when (and fn (eq :pressed (state-from ev)))
                   (funcall fn scene)))))
+          (subscribe-with-handler-body-to scroll-event (ev) events
+            (let* ((y (* (x-offset-from ev) 0.005))
+                   (x (* (y-offset-from ev) 0.005)))
+              (pitch-camera cam x)
+              (move-camera cam y)))
           (bt:make-thread
            (lambda ()
              (loop while (enabledp this) do

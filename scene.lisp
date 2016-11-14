@@ -48,31 +48,26 @@
     (let ((*transform-matrix* (mult *transform-matrix* transform)))
       (call-next-method))))
 
+
 (defun %cache-transform (cam)
   (with-slots (transform circle-angle pitch-angle) cam
-    (setf transform (mult (euler-axis->mat4 pitch-angle (vec3 1.0 0.0 0.0))
+    (setf transform (mult (euler-axis->mat4 #f pitch-angle (vec3 1.0 0.0 0.0))
                           (translation-mat4 0.0 0.0 -10.0)
-                          (euler-axis->mat4 circle-angle (vec3 0.0 1.0 0.0))))))
+                          (euler-axis->mat4 #f circle-angle (vec3 0.0 1.0 0.0))))))
 
-(defun move-right (cam angle)
+
+(defun move-camera (cam angle)
   (with-slots (circle-angle) cam
     (decf circle-angle angle))
   (%cache-transform cam))
 
-(defun move-left (cam angle)
-  (with-slots (circle-angle) cam
-    (decf circle-angle angle))
-  (%cache-transform cam))
 
-(defun look-up (cam angle)
+(defun pitch-camera (cam angle)
   (with-slots (pitch-angle) cam
-    (incf pitch-angle angle))
-  (%cache-transform cam))
-
-(defun look-down (cam angle)
-  (with-slots (pitch-angle) cam
-    (decf pitch-angle angle))
-  (%cache-transform cam))
+    (let ((new-angle (max (- pi) (min pi (+ pitch-angle angle)))))
+      (unless (= new-angle pitch-angle)
+        (setf pitch-angle new-angle)
+        (%cache-transform cam)))))
 
 ;;;
 ;;;
