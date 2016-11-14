@@ -16,5 +16,11 @@
   :serial t
   :components ((:file "packages")
                (:file "utils")
+               (:module models
+                        :serial t
+                        :components ((:file "simple-mesh")
+                                     (:file "ball")
+                                     (:file "stage")))
+               (:file "camera")
                (:file "scene")
                (:file "main")))

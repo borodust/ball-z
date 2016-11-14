@@ -1,5 +1,9 @@
 (in-package :ball-z)
 
+
+(define-constant +half-pi+ (/ pi 2))
+
+
 (defvar *configuration-pathname* nil)
 
 
