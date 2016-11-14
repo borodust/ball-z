@@ -1,22 +1,75 @@
 (in-package :ball-z)
 
 
-(defclass ball-z (enableable generic-system) ()
+(defvar *main-latch* (make-latch))
+
+
+(defclass ball-z (enableable generic-system)
+  ((keymap :initform nil))
   (:default-initargs :depends-on '(host-system
                                    graphics-system
                                    physics-system
                                    audio-system
                                    resource-system)))
 
+(defun bind-key (key action)
+  (with-slots (keymap) (engine-system 'ball-z)
+    (setf (gethash key keymap) action)))
+
+
+(defun make-default-keymap ()
+  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d))
+    (setf w (lambda (s)
+              (let ((cam (node s :camera)))
+                (look-down cam 0.1)))
+          a (lambda (s)
+              (let ((cam (node s :camera)))
+                (move-left cam 0.1)))
+          s (lambda (s)
+              (let ((cam (node s :camera)))
+                (look-up cam 0.1)))
+          d (lambda (s)
+              (let ((cam (node s :camera)))
+                (move-right cam 0.1))))))
+
 
 (defmethod initialize-system :after ((this ball-z))
-  (log:config (property :log-level :info))
-  (let ((host (engine-system 'host-system)))
-    (when-all ((-> host
-                 (setf (viewport-title host) "Ball-Z")))
-      (log:debug "Ball-Z initialized"))))
+  (with-slots (keymap) this
+    (log:config (property :log-level :info))
+    (let ((host (engine-system 'host-system))
+          (events (engine-system 'event-system)))
+      (setf keymap (make-default-keymap))
+
+
+      (when-all ((-> host
+                   (setf (viewport-title host) "Ball-Z")))
+        (subscribe-with-handler-body-to viewport-hiding-event () events
+          (-> (engine)
+            (shutdown)
+            (log:debug "Ball-Z stopped")
+            (open-latch *main-latch*)))
+        (let ((scene (make-main-scene)))
+          (subscribe-with-handler-body-to keyboard-event (ev) events
+            (ge.util:with-hash-entries ((key-fn (key-from ev))) keymap
+              (let ((fn key-fn))
+                (when (and fn (eq :pressed (state-from ev)))
+                  (funcall fn scene)))))
+          (bt:make-thread
+           (lambda ()
+             (loop while (enabledp this) do
+                  (animate scene)
+                  (sleep 0.014))))
+          :name "scene-worker")
+        (log:debug "Ball-Z started")))))
 
 
 (defun start (&optional (working-directory *default-pathname-defaults*))
   (log:config :sane2)
-  (startup (fad:merge-pathnames-as-file working-directory "ball-z.conf")))
+  (startup (setf *configuration-pathname*
+                 (fad:merge-pathnames-as-file working-directory "ball-z.conf"))))
+
+
+(defun main (&rest args)
+  (declare (ignore args))
+  (start)
+  (wait-for-latch *main-latch*))

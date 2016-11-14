@@ -12,8 +12,9 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (alexandria log4cl cl-bodge cl-fad)
+  :depends-on (log4cl cl-bodge cl-fad)
   :serial t
   :components ((:file "packages")
                (:file "utils")
+               (:file "scene")
                (:file "main")))
