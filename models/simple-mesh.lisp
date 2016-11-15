@@ -6,7 +6,7 @@
 ;;;
 (defclass simple-mesh (mesh-node)
   ((path :initarg :resource-path :reader resource-path-of)
-   (transform :initform (identity-mat4))))
+   (transform :initform (identity-mat4) :accessor transform-of)))
 
 
 (defun load-mesh-chunk (mesh)

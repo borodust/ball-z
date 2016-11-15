@@ -40,11 +40,14 @@
   (with-slots (keymap) this
     (log:config (property :log-level :info))
     (let ((host (engine-system 'host-system))
-          (events (engine-system 'event-system)))
+          (events (engine-system 'event-system))
+          (physics (engine-system 'physics-system)))
       (setf keymap (make-default-keymap))
 
       (when-all ((-> host
-                   (setf (viewport-title host) "Ball-Z")))
+                   (setf (viewport-title host) "Ball-Z"))
+                 (-> physics
+                   (setf (gravity) (vec3 0.0 -9.81 0.0))))
         (subscribe-with-handler-body-to viewport-hiding-event () events
           (-> (engine)
             (shutdown)
@@ -65,7 +68,9 @@
           (bt:make-thread
            (lambda ()
              (loop while (enabledp this) do
-                  (animate scene)
+                  (when-all* ((-> physics
+                                (observe-universe 0.014))
+                              (animate scene)))
                   (sleep 0.014))))
           :name "scene-worker")
         (log:debug "Ball-Z started")))))

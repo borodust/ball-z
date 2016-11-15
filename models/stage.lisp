@@ -4,7 +4,23 @@
 ;;;
 ;;;
 (defclass stage-mesh (mesh-node)
-  ((transform :initform (identity-mat4))))
+  ((transform :initform (identity-mat4))
+   (geoms :initform '())))
+
+
+(defmethod initialize-node :after ((this stage-mesh) (system physics-system))
+  (with-slots (geoms) this
+    (setf geoms (list
+                 (make-plane-geom system 0.0 0.99502474 -0.099502474 -1.0)
+                 (make-plane-geom system 0.099502474 0.99502474 0.0 -1.0)
+                 (make-plane-geom system 0.0 0.99502474 0.099502474 -1.0)
+                 (make-plane-geom system -0.099502474 0.99502474 0.0 -1.0)))))
+
+
+(defmethod discard-node :before ((this stage-mesh))
+  (with-slots (geoms) this
+    (dolist (g geoms)
+      (dispose g))))
 
 
 (defmethod make-node-mesh ((this stage-mesh) system)
