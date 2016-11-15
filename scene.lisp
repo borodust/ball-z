@@ -15,6 +15,14 @@
         (call-next-method))
       (call-next-method)))
 
+
+(defclass transform-to-origin-node (node) ())
+
+
+(defmethod rendering-pass ((this transform-to-origin-node))
+  (let ((*transform-matrix* (mult *transform-matrix* (inverse *transform-matrix*))))
+    (call-next-method)))
+
 ;;;
 ;;;
 ;;;
@@ -38,5 +46,11 @@
                     (load-shader-source :fragment-shader
                                         (resource-truename
                                          "shaders/f_ball.glsl"))))
-         (ball-mesh)
-         (stage-mesh)))))))))
+         (transform-to-origin-node
+          ((transform-node :translation (vec3 0.0 -1.0 -2.0) :name :place)
+           ((ball-mesh :simulated-p nil :name :ball))))
+         ((node :name :balls)
+          (ball-mesh)
+          (ball-mesh)
+          (ball-mesh)
+          (stage-mesh))))))))))

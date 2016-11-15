@@ -17,6 +17,7 @@
                  (make-plane-geom system -0.099502474 0.99502474 0.0 -1.0)))))
 
 
+
 (defmethod discard-node :before ((this stage-mesh))
   (with-slots (geoms) this
     (dolist (g geoms)

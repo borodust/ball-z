@@ -18,7 +18,8 @@
 
 
 (defun make-default-keymap ()
-  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d) (m :m))
+  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d) (m :m)
+                                            (space :space))
     (setf w (lambda (s)
               (let ((cam (node s :camera)))
                 (pitch-camera cam -0.1)))
@@ -33,7 +34,17 @@
                 (move-camera cam 0.1)))
           m (lambda (s)
               (let ((frame (node s :wireframe)))
-                (setf (enabledp frame) (not (enabledp frame))))))))
+                (setf (enabledp frame) (not (enabledp frame)))))
+          space (lambda (s)
+                  (let* ((place (node s :place))
+                         (balls (node s :balls))
+                         (ball (first (children-of place)))
+                         (new-ball (make-instance 'ball-mesh :simulated-p nil)))
+                    (when-all ((initialize-tree s new-ball))
+                      (abandon place ball)
+                      (adopt balls ball)
+                      (throw-ball ball)
+                      (adopt place new-ball)))))))
 
 
 (defmethod initialize-system :after ((this ball-z))
