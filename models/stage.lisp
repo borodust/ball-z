@@ -77,7 +77,7 @@
     (let ((*transform-matrix* (mult *transform-matrix* transform)))
       (setf (shading-parameter "normalTransform") (mat4->mat3 *transform-matrix*)
             (shading-parameter "modelViewProjection") (mult *projection-matrix*
-                                                            *camera-transform*
+                                                            (transform-of *camera*)
                                                             *transform-matrix*)
             (shading-parameter "dLight.ambient") (vec3 0.2 0.2 0.2)
             (shading-parameter "dLight.diffuse") (vec3 0.8 0.8 0.8)

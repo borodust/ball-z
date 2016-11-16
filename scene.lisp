@@ -16,13 +16,6 @@
       (call-next-method)))
 
 
-(defclass camera-space-node (node) ())
-
-
-(defmethod rendering-pass ((this camera-space-node))
-  (let ((*camera-transform* (mult *camera-transform* (inverse *camera-transform*))))
-    (call-next-method)))
-
 ;;;
 ;;;
 ;;;
@@ -46,9 +39,8 @@
                     (load-shader-source :fragment-shader
                                         (resource-truename
                                          "shaders/f_ball.glsl"))))
-         (camera-space-node
-          ((transform-node :translation (vec3 0.0 -1.0 -2.0) :name :place)
-           ((ball-model :simulated-p nil))))
+         ((node :name :place)
+          ((ball-model :simulated-p nil)))
          ((node :name :balls)
           ((ball-model :simulated-p t)))
          (stage-mesh)))))))))

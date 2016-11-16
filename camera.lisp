@@ -2,19 +2,36 @@
 
 
 (defparameter *camera-translation* (translation-mat4 0.0 -10.0 -10.0))
-(declaim (special *camera-transform*))
+(declaim (special *camera*))
 ;;;
 ;;;
 ;;;
+(defclass camera ()
+  ((transform :initform nil :reader transform-of)
+   (position :initform nil :reader position-of)
+   (orientation :initform nil :reader orientation-of)))
+
+
+(defun update-camera (cam transform)
+  (with-slots ((ctm transform) position orientation) cam
+    (let ((inverse (inverse transform)))
+      (setf ctm transform
+            position (make-vec3 (mult inverse (vec4 0.0 0.0 0.0 1.0)))
+            orientation (normalize (mult (make-mat3 inverse)
+                                         (vec3 0.0 0.0 -1.0)))))))
+
+
 (defclass player-camera-node (node)
   ((circle-angle :initform 0.0)
    (pitch-angle :initform 0.0)
-   (transform :initform *camera-translation*)))
+   (camera :initform (make-instance 'camera))
+   (transform :initform *camera-translation* :reader transform-of)))
 
 
 (defmethod rendering-pass ((this player-camera-node))
-  (with-slots (transform) this
-    (let ((*camera-transform* (mult *transform-matrix* transform)))
+  (with-slots (transform camera) this
+    (update-camera camera transform)
+    (let ((*camera* camera))
       (call-next-method))))
 
 

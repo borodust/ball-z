@@ -31,15 +31,25 @@
     (dispose geom)))
 
 
+(defmethod position-of ((this ball-body))
+  (with-slots (r-body) this
+    (position-of r-body)))
+
+
+(defmethod (setf position-of) ((vec vec3) (this ball-body))
+  (with-slots (r-body) this
+    (setf (position-of r-body) vec)))
+
+
 (defmethod transform-of ((this ball-body))
   (with-slots (r-body) this
     (mult (vec->translation-mat4 (position-of r-body))
           (mat->rotation-mat4 (rotation-of r-body)))))
 
 
-(defun push-body (body)
+(defun push-body (body force-vec)
   (with-slots (r-body) body
-    (apply-force r-body (vec3 0.0 0.0 -1000.0))))
+    (apply-force r-body force-vec)))
 
 
 (defun body-enabled-p (body)
@@ -63,6 +73,8 @@
 (defclass ball-model (model)
   ((transform :initform (identity-mat4) :accessor transform-of)
    (body :initform nil)
+   (last-pos :initform (vec3))
+   (last-ori :initform (vec3 0.0 0.0 -1.0))
    (simulated-p :initform nil :initarg :simulated-p :reader simulatedp)
    (sim-actions :initform '())))
 
@@ -77,14 +89,24 @@
     (loop for fn in sim-actions
        do (funcall fn)
        finally (setf sim-actions '()))
-    (when (body-enabled-p body)
+    (when (simulatedp this)
       (setf (transform-of this) (transform-of body))))
   (call-next-method))
 
 
 (defmethod rendering-pass ((this ball-model))
-  (let ((*transform-matrix* (mult *transform-matrix* (transform-of this))))
-    (call-next-method)))
+  (with-slots (last-pos last-ori) this
+    (let ((*transform-matrix* (mult *transform-matrix* (transform-of this))))
+      (if (simulatedp this)
+          (call-next-method)
+          (let* ((inverse-cam (inverse (transform-of *camera*)))
+                 (*transform-matrix* (mult inverse-cam
+                                            *transform-matrix*
+                                            (vec->translation-mat4 (vec3 0.0 -1.0 -2.0)))))
+            (setf last-pos (make-vec3 (mult *transform-matrix* (vec4 0.0 0.0 0.0 1.0)))
+                  last-ori (normalize (mult (make-mat3 *transform-matrix*)
+                                            (vec3 0.0 0.0 -1.0))))
+            (call-next-method))))))
 
 
 (defmethod initialize-node :after ((this ball-model) (system physics-system))
@@ -100,9 +122,11 @@
 
 
 (defun throw-ball (ball)
-  (with-slots (sim-actions body) ball
+  (with-slots (sim-actions body simulated-p last-pos last-ori) ball
     (push (lambda ()
-            (unless (body-enabled-p body)
-              (setf (body-enabled-p body) t))
-            (push-body body))
+            (unless (simulatedp ball)
+              (setf (body-enabled-p body) t
+                    (position-of body) last-pos
+                    simulated-p t))
+            (push-body body (mult last-ori 3000.0)))
           sim-actions)))
