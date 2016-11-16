@@ -12,15 +12,17 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (log4cl cl-bodge cl-fad)
+  :depends-on (log4cl cl-bodge cl-fad trivial-garbage)
   :serial t
   :components ((:file "packages")
                (:file "utils")
                (:file "camera")
+               (:file "chain-registry")
+               (:file "context")
                (:module models
                         :serial t
                         :components ((:file "simple-mesh")
                                      (:file "ball")
                                      (:file "stage")))
                (:file "scene")
-               (:file "main")))
+               (:file "system")))

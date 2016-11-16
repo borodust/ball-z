@@ -82,4 +82,5 @@
             (shading-parameter "dLight.ambient") (vec3 0.2 0.2 0.2)
             (shading-parameter "dLight.diffuse") (vec3 0.8 0.8 0.8)
             (shading-parameter "dLight.direction") (vec3 -0.57735026 -0.57735026 -0.57735026))
+        (setf (shading-parameter "baseColor") (vec3 0.8 0.8 0.8))
       (call-next-method))))

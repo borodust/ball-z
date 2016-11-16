@@ -7,28 +7,31 @@
 (defclass ball-mesh (simple-mesh) ()
   (:default-initargs :resource-path "models/ball.brf"))
 
-
-
 ;;;
 ;;;
 ;;;
 (defclass ball-body ()
   ((r-body :initform nil)
-   (geom :initform nil)))
+   (geom :initform nil)
+   (bounds :initform nil)))
 
 
-(defmethod initialize-instance :after ((this ball-body) &key physics)
-  (with-slots (r-body geom) this
+(defmethod initialize-instance :after ((this ball-body) &key physics registry)
+  (with-slots (r-body geom bounds) this
     (setf r-body (make-rigid-body physics)
-          geom (make-sphere-geom physics 0.5))
+          geom (make-sphere-geom physics 0.5)
+          bounds (make-sphere-geom physics 0.6))
+    (register-bounding-geom registry bounds)
     (setf (mass-of r-body) (make-sphere-mass 1.0 0.5))
-    (bind-geom geom r-body)))
+    (bind-geom geom r-body)
+    (bind-geom bounds r-body)))
 
 
 (defun discard-body (ball-body)
-  (with-slots (r-body geom) ball-body
+  (with-slots (r-body geom bounds) ball-body
     (dispose r-body)
-    (dispose geom)))
+    (dispose geom)
+    (dispose bounds)))
 
 
 (defmethod position-of ((this ball-body))
@@ -73,10 +76,15 @@
 (defclass ball-model (model)
   ((transform :initform (identity-mat4) :accessor transform-of)
    (body :initform nil)
+   (color :initform (case (random 3)
+                      (0 (vec3 1.0 0.0 0.0))
+                      (1 (vec3 0.0 1.0 0.0))
+                      (2 (vec3 0.0 0.0 1.0))))
    (last-pos :initform (vec3))
    (last-ori :initform (vec3 0.0 0.0 -1.0))
    (simulated-p :initform nil :initarg :simulated-p :reader simulatedp)
-   (sim-actions :initform '())))
+   (sim-actions :initform '())
+   (chain-registry :initarg :chain-registry)))
 
 
 (defmethod make-model-graph ((this ball-model))
@@ -95,7 +103,8 @@
 
 
 (defmethod rendering-pass ((this ball-model))
-  (with-slots (last-pos last-ori) this
+  (with-slots (last-pos last-ori color) this
+    (setf (shading-parameter "baseColor") color)
     (let ((*transform-matrix* (mult *transform-matrix* (transform-of this))))
       (if (simulatedp this)
           (call-next-method)
@@ -110,8 +119,8 @@
 
 
 (defmethod initialize-node :after ((this ball-model) (system physics-system))
-  (with-slots (body) this
-    (setf body (make-instance 'ball-body :physics system))
+  (with-slots (body chain-registry) this
+    (setf body (make-instance 'ball-body :physics system :registry chain-registry))
     (unless (simulatedp this)
       (setf (body-enabled-p body) nil))))
 

@@ -31,7 +31,8 @@
                         "normalTransform"
                         "dLight.ambient"
                         "dLight.diffuse"
-                        "dLight.direction")
+                        "dLight.direction"
+                        "baseColor")
           :sources (list
                     (load-shader-source :vertex-shader
                                         (resource-truename
@@ -39,8 +40,6 @@
                     (load-shader-source :fragment-shader
                                         (resource-truename
                                          "shaders/f_ball.glsl"))))
-         ((node :name :place)
-          ((ball-model :simulated-p nil)))
-         ((node :name :balls)
-          ((ball-model :simulated-p t)))
+         ((node :name :place))
+         ((node :name :balls))
          (stage-mesh)))))))))
