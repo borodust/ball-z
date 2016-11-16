@@ -48,9 +48,7 @@
                                          "shaders/f_ball.glsl"))))
          (transform-to-origin-node
           ((transform-node :translation (vec3 0.0 -1.0 -2.0) :name :place)
-           ((ball-mesh :simulated-p nil :name :ball))))
+           ((ball-model :simulated-p nil))))
          ((node :name :balls)
-          (ball-mesh)
-          (ball-mesh)
-          (ball-mesh)
-          (stage-mesh))))))))))
+          ((ball-model :simulated-p t)))
+         (stage-mesh)))))))))

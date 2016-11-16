@@ -39,7 +39,7 @@
                   (let* ((place (node s :place))
                          (balls (node s :balls))
                          (ball (first (children-of place)))
-                         (new-ball (make-instance 'ball-mesh :simulated-p nil)))
+                         (new-ball (make-instance 'ball-model :simulated-p nil)))
                     (when-all ((initialize-tree s new-ball))
                       (abandon place ball)
                       (adopt balls ball)

@@ -14,7 +14,12 @@
                  (make-plane-geom system 0.0 0.99502474 -0.099502474 -1.0)
                  (make-plane-geom system 0.099502474 0.99502474 0.0 -1.0)
                  (make-plane-geom system 0.0 0.99502474 0.099502474 -1.0)
-                 (make-plane-geom system -0.099502474 0.99502474 0.0 -1.0)))))
+                 (make-plane-geom system -0.099502474 0.99502474 0.0 -1.0)
+
+                 (make-plane-geom system 0.0 0.0 1.0 -10.0)
+                 (make-plane-geom system 0.0 0.0 -1.0 -10.0)
+                 (make-plane-geom system 1.0 0.0 0.0 -10.0)
+                 (make-plane-geom system -1.0 0.0 0.0 -10.0)))))
 
 
 
