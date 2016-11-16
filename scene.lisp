@@ -16,11 +16,11 @@
       (call-next-method)))
 
 
-(defclass transform-to-origin-node (node) ())
+(defclass camera-space-node (node) ())
 
 
-(defmethod rendering-pass ((this transform-to-origin-node))
-  (let ((*transform-matrix* (mult *transform-matrix* (inverse *transform-matrix*))))
+(defmethod rendering-pass ((this camera-space-node))
+  (let ((*camera-transform* (mult *camera-transform* (inverse *camera-transform*))))
     (call-next-method)))
 
 ;;;
@@ -46,7 +46,7 @@
                     (load-shader-source :fragment-shader
                                         (resource-truename
                                          "shaders/f_ball.glsl"))))
-         (transform-to-origin-node
+         (camera-space-node
           ((transform-node :translation (vec3 0.0 -1.0 -2.0) :name :place)
            ((ball-model :simulated-p nil))))
          ((node :name :balls)

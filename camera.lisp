@@ -2,7 +2,7 @@
 
 
 (defparameter *camera-translation* (translation-mat4 0.0 -10.0 -10.0))
-
+(declaim (special *camera-transform*))
 ;;;
 ;;;
 ;;;
@@ -14,7 +14,7 @@
 
 (defmethod rendering-pass ((this player-camera-node))
   (with-slots (transform) this
-    (let ((*transform-matrix* (mult *transform-matrix* transform)))
+    (let ((*camera-transform* (mult *transform-matrix* transform)))
       (call-next-method))))
 
 
