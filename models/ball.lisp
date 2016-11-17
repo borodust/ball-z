@@ -12,17 +12,18 @@
 ;;;
 (defclass ball-body ()
   ((r-body :initform nil)
-   (geom :initform nil)
-   (bounds :initform nil)
+   (geom :initform nil :reader geom-of)
+   (bounds :initform nil :reader bounds-of)
    (registry :initarg :registry)))
 
 
-(defmethod initialize-instance :after ((this ball-body) &key physics type)
+(defmethod initialize-instance :after ((this ball-body) &key physics model)
   (with-slots (r-body geom bounds registry) this
     (setf r-body (make-rigid-body physics)
           geom (make-sphere-geom physics 0.5)
           bounds (make-sphere-geom physics 0.575))
-    (register-bounding-geom registry bounds type)
+    (register-bounding-geom registry bounds model)
+    (register-model-geom registry model geom)
     (setf (mass-of r-body) (make-sphere-mass 1.0 0.5))
     (bind-geom geom r-body)
     (bind-geom bounds r-body)))
@@ -90,10 +91,11 @@
 (defclass ball-model (model)
   ((transform :initform (identity-mat4) :accessor transform-of)
    (body :initform nil)
-   (type :initform (aref *types* (random (length *types*))))
+   (type :initform (aref *types* (random (length *types*))) :reader ball-type-of)
    (linked-p :initform nil)
    (last-pos :initform (vec3))
    (last-ori :initform (vec3 0.0 0.0 -1.0))
+   (virgin-p :initform t :initarg virgin-p :reader virginp)
    (simulated-p :initform nil :initarg :simulated-p :reader simulatedp)
    (sim-actions :initform '())
    (chain-registry :initarg :chain-registry)))
@@ -137,7 +139,7 @@
     (setf body (make-instance 'ball-body
                               :physics system
                               :registry chain-registry
-                              :type type))
+                              :model this))
     (unless (simulatedp this)
       (setf (body-enabled-p body) nil))))
 
@@ -156,3 +158,18 @@
                     simulated-p t))
             (push-body body (mult last-ori 3000.0)))
           sim-actions)))
+
+
+(defun loose-virginity (ball)
+  (with-slots (virgin-p) ball
+    (setf virgin-p nil)))
+
+
+(defun process-strike (virgin other reg events)
+  (loose-virginity virgin)
+  (when (eq (ball-type-of virgin)
+            (ball-type-of other))
+    (with-slots (body) other
+      (when-let ((balls (find-model-chain-by-bounding-geom reg (bounds-of body))))
+        (pushnew virgin balls)
+        (post (make-chain-broke-event balls) events)))))

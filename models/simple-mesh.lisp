@@ -6,7 +6,7 @@
 ;;;
 (defclass simple-mesh (mesh-node)
   ((path :initarg :resource-path :reader resource-path-of)
-   (transform :initform (identity-mat4) :accessor transform-of)))
+   (transform :initform (identity-mat4) :accessor transform-of :allocation :class)))
 
 
 (defun load-mesh-chunk (mesh)
@@ -14,7 +14,7 @@
 
 
 (defmethod make-node-mesh ((this simple-mesh) system)
-  (with-slots (transform bones) this
+  (with-slots (transform bones shared-mesh) this
     (multiple-value-bind (mesh chunk-transform) (chunk->mesh system (load-mesh-chunk this))
       (setf transform chunk-transform)
       mesh)))

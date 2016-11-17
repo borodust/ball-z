@@ -16,6 +16,7 @@
   :serial t
   :components ((:file "packages")
                (:file "utils")
+               (:file "events")
                (:file "camera")
                (:file "chain-registry")
                (:file "context")

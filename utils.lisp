@@ -12,3 +12,6 @@
    *configuration-pathname*
    (property :resources "resources/")
    relative-path))
+
+
+(defgeneric ball-type-of (ball))
