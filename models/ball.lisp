@@ -95,7 +95,7 @@
    (linked-p :initform nil)
    (last-pos :initform (vec3))
    (last-ori :initform (vec3 0.0 0.0 -1.0))
-   (virgin-p :initform t :initarg virgin-p :reader virginp)
+   (virgin-p :initform t :initarg :virgin-p :reader virginp)
    (simulated-p :initform nil :initarg :simulated-p :reader simulatedp)
    (sim-actions :initform '())
    (chain-registry :initarg :chain-registry)))
@@ -104,6 +104,10 @@
 (defmethod make-model-graph ((this ball-model))
   (scenegraph
    (ball-mesh)))
+
+
+(defun make-ball (reg)
+  (make-instance 'ball-model :simulated-p t :virgin-p nil :chain-registry reg))
 
 
 (defmethod simulation-pass ((this ball-model))
@@ -149,15 +153,26 @@
     (discard-body body)))
 
 
+(defmacro when-simulating ((ball) &body body)
+  (with-gensyms (a)
+    `(with-slots ((,a sim-actions)) ,ball
+       (push (lambda () ,@body) ,a))))
+
+
 (defun throw-ball (ball)
   (with-slots (sim-actions body simulated-p last-pos last-ori) ball
-    (push (lambda ()
-            (unless (simulatedp ball)
-              (setf (body-enabled-p body) t
-                    (position-of body) last-pos
-                    simulated-p t))
-            (push-body body (mult last-ori 3000.0)))
-          sim-actions)))
+    (when-simulating (ball)
+      (setf (position-of body) last-pos))
+    (push-ball ball (mult last-ori 3000.0))))
+
+
+(defun push-ball (ball f-vec)
+  (with-slots (body simulated-p) ball
+    (when-simulating (ball)
+      (unless (simulatedp ball)
+        (setf (body-enabled-p body) t
+              simulated-p t))
+      (push-body body f-vec))))
 
 
 (defun loose-virginity (ball)
