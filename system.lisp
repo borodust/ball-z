@@ -61,19 +61,18 @@
       (-> physics
         (register-collision-callback
          (lambda (g0 g1)
-           #++(when (or g0 g1)
-             (break))
-           (let ((reg (ctx-chain-registry ctx)))
-             (or (geom-present-p reg g0)
-                 (geom-present-p reg g1))))))
+           (process-collision (ctx-chain-registry ctx) g0 g1))))
 
       (bt:make-thread
        (lambda ()
-         (loop while (enabledp this) do
-              (when-all* ((-> physics
-                            (observe-universe 0.014))
-                          (animate scene)))
-              (sleep 0.014)))
+         (let ((reg (ctx-chain-registry ctx)))
+           (loop while (enabledp this) do
+                (when-all* ((clear-links reg)
+                            (-> physics
+                              (observe-universe 0.014))
+                            (find-chains reg)
+                            (animate scene)))
+                  (sleep 0.014))))
        :name "scene-worker")
       ctx)))
 
