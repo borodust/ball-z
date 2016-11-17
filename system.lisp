@@ -70,7 +70,7 @@
                 (when-all* ((clear-links reg)
                             (-> physics
                               (observe-universe 0.014))
-                            (find-chains reg)
+                            (make-chains reg)
                             (animate scene)))
                   (sleep 0.014))))
        :name "scene-worker")
