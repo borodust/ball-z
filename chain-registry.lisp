@@ -46,7 +46,7 @@
            (gethash g b-geoms)))))
 
 
-(defun process-collision (reg this-geom that-geom)
+(defun process-bounds-collision (reg this-geom that-geom)
   (%with-locked-registry (reg)
     (with-slots (b-geoms) reg
       (with-hash-entries ((this-model this-geom) (that-model that-geom)) b-geoms

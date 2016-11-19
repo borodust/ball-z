@@ -21,4 +21,10 @@
 
 
 (defun register-strike (ctx b0 b1)
-  (setf (ctx-strike ctx) (cons b0 b1)))
+  (unless (ctx-strike ctx)
+    (setf (ctx-strike ctx) (cons b0 b1))))
+
+
+(defun pop-strike (ctx)
+  (prog1 (ctx-strike ctx)
+    (setf (ctx-strike ctx) nil)))

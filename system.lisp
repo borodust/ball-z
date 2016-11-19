@@ -38,10 +38,9 @@
 
 
 (defun strike (ctx)
-  (when-let ((strike (ctx-strike ctx)))
+  (when-let ((strike (pop-strike ctx)))
     (let ((reg (ctx-chain-registry ctx))
           (events (ctx-event-system ctx)))
-      (setf (ctx-strike ctx) nil)
       (destructuring-bind (b0 . b1) strike
         (process-strike b0 b1 reg events)))))
 
@@ -120,18 +119,20 @@
       (-> (physics)
         (register-collision-callback
          (lambda (g0 g1)
+           (process-bounds-collision reg g0 g1)))
+
+        (register-contact-callback
+         (lambda (g0 g1)
            (let ((reg (ctx-chain-registry ctx)))
-             (cond
-               ((process-collision reg g0 g1))
-               ((when-let ((b0 (find-model-by-geom reg g0))
-                           (b1 (find-model-by-geom reg g1)))
-                  (cond
-                    ((virginp b0)
-                     (register-strike ctx b0 b1))
-                    ((virginp b1)
-                     (register-strike ctx b1 b0)))
-                  nil))
-               (t nil))))))
+             (when-let ((b0 (find-model-by-geom reg g0))
+                        (b1 (find-model-by-geom reg g1)))
+               (cond
+                 ((virginp b0)
+                  (register-strike ctx b0 b1))
+                 ((virginp b1)
+                  (register-strike ctx b1 b0)))
+               nil)))))
+
 
 
       (subscribe-with-handler-body-to chain-broke-event (ev) events
