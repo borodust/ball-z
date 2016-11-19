@@ -1,84 +1,6 @@
 (in-package :ball-z)
 
-
 ;;;
-;;;
-;;;
-(defclass ball-mesh (simple-mesh) ()
-  (:default-initargs :resource-path "models/ball.brf"))
-
-;;;
-;;;
-;;;
-(defclass ball-body ()
-  ((r-body :initform nil)
-   (geom :initform nil :reader geom-of)
-   (bounds :initform nil :reader bounds-of)
-   (registry :initarg :registry)))
-
-
-(defmethod initialize-instance :after ((this ball-body) &key physics model)
-  (with-slots (r-body geom bounds registry) this
-    (setf r-body (make-rigid-body physics)
-          geom (make-sphere-geom physics 0.5)
-          bounds (make-sphere-geom physics 0.575))
-    (register-bounding-geom registry bounds model)
-    (register-model-geom registry model geom)
-    (setf (mass-of r-body) (make-sphere-mass 1.0 0.5))
-    (bind-geom geom r-body)
-    (bind-geom bounds r-body)))
-
-
-(defun discard-body (ball-body)
-  (with-slots (r-body geom bounds) ball-body
-    (dispose r-body)
-    (dispose geom)
-    (dispose bounds)))
-
-
-(defun linked-body-p (body)
-  (with-slots (registry bounds) body
-    (linked-p registry bounds)))
-
-
-(defmethod position-of ((this ball-body))
-  (with-slots (r-body) this
-    (position-of r-body)))
-
-
-(defmethod (setf position-of) ((vec vec3) (this ball-body))
-  (with-slots (r-body) this
-    (setf (position-of r-body) vec)))
-
-
-(defmethod transform-of ((this ball-body))
-  (with-slots (r-body) this
-    (mult (vec->translation-mat4 (position-of r-body))
-          (mat->rotation-mat4 (rotation-of r-body)))))
-
-
-(defun push-body (body force-vec)
-  (with-slots (r-body) body
-    (apply-force r-body force-vec)))
-
-
-(defun body-enabled-p (body)
-  (with-slots (geom) body
-    (enabledp geom)))
-
-
-(defun (setf body-enabled-p) (value body)
-  (with-slots (geom r-body bounds) body
-    (if value
-        (progn
-          (enable geom)
-          (enable bounds)
-          (enable r-body))
-        (progn
-          (disable geom)
-          (disable bounds)
-          (disable r-body)))))
-
 ;;;
 ;;;
 ;;;
@@ -100,7 +22,11 @@
    (virgin-p :initform t :initarg :virgin-p :reader virginp)
    (simulated-p :initform nil :initarg :simulated-p :reader simulatedp)
    (sim-actions :initform '())
-   (chain-registry :initarg :chain-registry)))
+   (chain-registry :initarg :chain-registry)
+   (sounds :initform nil)
+   (audio :initform nil)))
+
+
 
 
 (defmethod make-model-graph ((this ball-model))
@@ -150,6 +76,12 @@
       (setf (body-enabled-p body) nil))))
 
 
+(defmethod initialize-node :after ((this ball-model) (system audio-system))
+  (with-slots (sounds audio) this
+    (setf audio system
+          sounds (make-instance 'ball-audio :audio system))))
+
+
 (defmethod discard-node :before ((this ball-model))
   (with-slots (body) this
     (discard-body body)))
@@ -162,9 +94,11 @@
 
 
 (defun throw-ball (ball)
-  (with-slots (sim-actions body simulated-p last-pos last-ori) ball
+  (with-slots (sim-actions body simulated-p last-pos last-ori audio sounds) ball
     (when-simulating (ball)
       (setf (position-of body) last-pos))
+    (-> (audio)
+      (play-pop-sound sounds))
     (push-ball ball (mult last-ori 3000.0))))
 
 
@@ -184,9 +118,14 @@
 
 (defun process-strike (virgin other reg events)
   (loose-virginity virgin)
-  (when (eq (ball-type-of virgin)
-            (ball-type-of other))
-    (with-slots (body) other
-      (when-let ((balls (find-model-chain-by-bounding-geom reg (bounds-of body))))
-        (pushnew virgin balls)
-        (post (make-chain-broke-event balls) events)))))
+    (with-slots (body audio sounds) other
+      (if (eq (ball-type-of virgin)
+              (ball-type-of other))
+          (when-let ((balls (find-model-chain-by-bounding-geom reg (bounds-of body))))
+            (pushnew virgin balls)
+            (when (> (length balls) 2)
+              (post (make-chain-broke-event balls) events)
+              (-> (audio)
+                (play-strike-sound sounds))))
+          (-> (audio)
+            (play-fail-sound sounds)))))

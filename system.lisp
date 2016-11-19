@@ -6,7 +6,8 @@
 
 (defclass ball-z (thread-bound-system)
   ((events :initform nil :reader event-system-of)
-   (physics :initform nil))
+   (physics :initform nil)
+   (audio :initform nil))
   (:default-initargs :depends-on '(host-system
                                    graphics-system
                                    physics-system
@@ -15,11 +16,12 @@
 
 
 (defmethod initialize-system :after ((this ball-z))
-  (with-slots (events physics) this
+  (with-slots (events physics audio) this
     (log:config (property :log-level :info))
     (let ((host (engine-system 'host-system)))
       (setf physics (engine-system 'physics-system))
       (setf events (engine-system 'event-system))
+      (setf audio (engine-system 'audio-system))
       (register-event-classes events 'chain-broke-event)
 
       (when-all ((-> (host)
@@ -92,11 +94,12 @@
 
 
 (defmethod make-system-context ((this ball-z))
-  (with-slots (events physics) this
+  (with-slots (events physics audio) this
     (let* ((scene (make-main-scene))
            (cam (node scene :camera))
            (reg (make-instance 'chain-registry))
-           (ctx (make-ball-z-context scene events (make-default-keymap reg) reg)))
+           (ctx (make-ball-z-context scene (make-default-keymap reg) reg
+                                     events audio)))
 
       (subscribe-with-handler-body-to keyboard-event (ev) events
         (ge.util:with-hash-entries ((key-fn (key-from ev))) (ctx-keymap ctx)
@@ -133,11 +136,13 @@
 
       (subscribe-with-handler-body-to chain-broke-event (ev) events
         (with-accessors ((balls balls-from)) ev
-          (when (> (length balls) 2)
-            (-> (this)
-              (dolist (b balls)
-                (abandon (parent-of b) b)
-                (discard-node b))))))
+          (-> (this)
+            (dolist (b balls)
+              (abandon (parent-of b) b)
+              (discard-node b)))))
+
+
+      (load-background-music ctx)
 
 
       (bt:make-thread
@@ -153,6 +158,10 @@
                 (sleep 0.014))))
        :name "scene-worker")
       ctx)))
+
+
+(defmethod destroy-system-context (ctx (this ball-z))
+  (stop-background-music ctx))
 
 
 (defun start (&optional (working-directory *default-pathname-defaults*))

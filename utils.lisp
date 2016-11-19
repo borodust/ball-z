@@ -17,22 +17,37 @@
 (defgeneric ball-type-of (ball))
 
 
+;;;
+;;;
+;;;
 (defclass shared-resource ()
-  ((count :initform 0)))
+  ((resource :initform (error "resource must be provided")
+             :initarg :resource :reader %resource-of)
+   (count :initform 0)))
 
 
-(defgeneric dispose-resource (resource))
+(defgeneric dispose-resource (resource obj)
+  (:method ((this shared-resource) obj)
+    (with-slots (resource) this
+      (setf resource nil))))
 
 
 (defgeneric acquire-resource (resource)
   (:method ((resource shared-resource))
-    (with-slots (count) resource
-      (incf count))))
+    (with-slots (count resource) resource
+      (incf count)
+      resource)))
 
 
 (defgeneric release-resource (resource)
-  (:method ((resource shared-resource))
-    (with-slots (count) resource
+  (:method ((this shared-resource))
+    (with-slots (count resource) this
       (decf count)
       (when (= count 0)
-        (dispose-resource resource)))))
+        (dispose-resource this resource)))))
+
+
+(defgeneric resource-disposed-p (resource)
+  (:method ((this shared-resource))
+    (with-slots (resource) this
+      (null resource))))

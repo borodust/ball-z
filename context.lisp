@@ -1,19 +1,18 @@
 (in-package :ball-z)
 
 
-
 (defstruct (ball-z-ctx
              (:conc-name ctx-)
-             (:constructor %make-ball-z-context (scene keymap event-system chain-registry)))
+             (:constructor make-ball-z-context (scene keymap chain-registry
+                                                      event-system
+                                                      audio-system)))
   (scene nil :read-only t)
   (keymap nil :read-only t)
-  (event-system nil :read-only t)
   (chain-registry nil :read-only t)
+  (event-system nil :read-only t)
+  (audio-system nil :read-only t)
+  (background-audio nil)
   (strike nil))
-
-
-(defun make-ball-z-context (scene event-system keymap reg)
-  (%make-ball-z-context scene keymap event-system reg))
 
 
 (defun bind-key (key action)

@@ -1,9 +1,11 @@
 (in-package :ball-z)
 
 
-(defevent ball-collision-event (event)
-  (this-ball that-ball))
-
-
 (defevent chain-broke-event (event)
   (balls))
+
+
+(defevent ball-pop-event (event) ())
+
+
+(defevent ball-strike-failed-event (event) ())

@@ -20,9 +20,12 @@
                (:file "camera")
                (:file "chain-registry")
                (:file "context")
+               (:file "audio")
                (:module models
                         :serial t
-                        :components ((:file "simple-mesh")
+                        :components ((:file "ball-mesh")
+                                     (:file "ball-audio")
+                                     (:file "ball-body")
                                      (:file "ball")
                                      (:file "stage")))
                (:file "scene")
