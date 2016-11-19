@@ -84,9 +84,11 @@
 ;;;
 (defvar *colors* (list (cons :red (vec3 1.0 0.0 0.0))
                        (cons :green (vec3 0.0 1.0 0.0))
-                       (cons :blue (vec3 0.0 0.0 1.0))))
+                       (cons :blue (vec3 0.0 0.0 1.0))
+                       (cons :white (vec3 1.0 1.0 1.0))
+                       (cons :yellow (vec3 1.0 1.0 0.0))))
 
-(defvar *types* #(:red :green :blue))
+(defvar *types* #(:red :green :blue :white :yellow))
 
 (defclass ball-model (model)
   ((transform :initform (identity-mat4) :accessor transform-of)

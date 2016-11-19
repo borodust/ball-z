@@ -15,3 +15,24 @@
 
 
 (defgeneric ball-type-of (ball))
+
+
+(defclass shared-resource ()
+  ((count :initform 0)))
+
+
+(defgeneric dispose-resource (resource))
+
+
+(defgeneric acquire-resource (resource)
+  (:method ((resource shared-resource))
+    (with-slots (count) resource
+      (incf count))))
+
+
+(defgeneric release-resource (resource)
+  (:method ((resource shared-resource))
+    (with-slots (count) resource
+      (decf count)
+      (when (= count 0)
+        (dispose-resource resource)))))

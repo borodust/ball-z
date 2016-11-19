@@ -22,13 +22,13 @@
       (setf events (engine-system 'event-system))
       (register-event-classes events 'chain-broke-event)
 
-      (when-all ((-> host
+      (when-all ((-> (host)
                    (setf (viewport-title host) "Ball-Z"))
-                 (-> physics
+                 (-> (physics)
                    (setf (gravity) (vec3 0.0 -9.81 0.0))))
 
         (subscribe-with-handler-body-to viewport-hiding-event () events
-          (-> (engine)
+          (-> ((engine))
             (shutdown)
             (log:debug "Ball-Z stopped")
             (open-latch *main-latch*)))
@@ -114,7 +114,7 @@
              (make-instance 'ball-model :simulated-p nil
                             :chain-registry (ctx-chain-registry ctx)))
 
-      (-> physics
+      (-> (physics)
         (register-collision-callback
          (lambda (g0 g1)
            (let ((reg (ctx-chain-registry ctx)))
@@ -134,7 +134,7 @@
       (subscribe-with-handler-body-to chain-broke-event (ev) events
         (with-accessors ((balls balls-from)) ev
           (when (> (length balls) 2)
-            (-> this
+            (-> (this)
               (dolist (b balls)
                 (abandon (parent-of b) b)
                 (discard-node b))))))
@@ -144,7 +144,7 @@
        (lambda ()
          (let ((reg (ctx-chain-registry ctx)))
            (loop while (enabledp this) do
-                (-> physics
+                (-> (physics)
                   (clear-links reg)
                   (observe-universe 0.014)
                   (make-chains reg)
