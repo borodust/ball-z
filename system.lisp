@@ -162,7 +162,9 @@
 
 
 (defmethod destroy-system-context (ctx (this ball-z))
-  (stop-background-music ctx))
+  (stop-background-music ctx)
+  (dispose (ctx-scene ctx)))
+
 
 
 (defun start (&optional (working-directory *default-pathname-defaults*))

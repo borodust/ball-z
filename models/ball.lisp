@@ -83,8 +83,9 @@
 
 
 (defmethod discard-node :before ((this ball-model))
-  (with-slots (body) this
-    (discard-body body)))
+  (with-slots (body sounds) this
+    (discard-body body)
+    (dispose sounds)))
 
 
 (defmacro when-simulating ((ball) &body body)

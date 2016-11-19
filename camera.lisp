@@ -50,7 +50,7 @@
 
 (defun pitch-camera (cam angle)
   (with-slots (pitch-angle) cam
-    (let ((new-angle (max (- (/ +half-pi+ 2)) (min (/ +half-pi+ 2) (+ pitch-angle angle)))))
+    (let ((new-angle (max (/ +half-pi+ 8) (min (/ +half-pi+ 2) (+ pitch-angle angle)))))
       (unless (= new-angle pitch-angle)
         (setf pitch-angle new-angle)
         (%cache-transform cam)))))
