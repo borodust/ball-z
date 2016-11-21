@@ -18,6 +18,7 @@
   :components ((:file "packages")
                (:file "utils")
                (:file "text")
+               (:file "start-screen")
                (:file "events")
                (:file "camera")
                (:file "chain-registry")

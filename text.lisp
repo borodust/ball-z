@@ -63,7 +63,7 @@
             (first (conspack:decode-file (resource-truename
                                           (format nil "fonts/~a.met" font))))
           (%set-text-vertex-data pos-array i x0 (- y0) x1 (- y1))
-          (%set-text-vertex-data tex-array i u0 v0 u1 v1)
+          (%set-text-vertex-data tex-array i u0 (- 1.0 v0) u1 (- 1.0 v1))
           (%set-index-data index-array i)
           (incf i))
         (setf mesh (make-mesh system vertex-count :triangles index-array))
