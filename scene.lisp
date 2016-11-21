@@ -22,24 +22,26 @@
 (defun make-main-scene ()
   (make-scene
    (scenegraph
-    ((projection-node :width 640 :height 480)
-     ((player-camera-node :name :camera)
-      ((wireframe-mode :name :wireframe)
-       (shading-pipeline-node
-        ((shading-program-node
-          :parameters '("modelViewProjection"
-                        "normalTransform"
-                        "dLight.ambient"
-                        "dLight.diffuse"
-                        "dLight.direction"
-                        "baseColor")
-          :sources (list
-                    (load-shader-source :vertex-shader
-                                        (resource-truename
-                                         "shaders/v_ball.glsl"))
-                    (load-shader-source :fragment-shader
-                                        (resource-truename
-                                         "shaders/f_ball.glsl"))))
-         ((node :name :place))
-         ((node :name :balls))
-         (stage-mesh)))))))))
+    (node
+     ((projection-node :width 640 :height 480)
+      ((player-camera-node :name :camera)
+       ((wireframe-mode :name :wireframe)
+        (shading-pipeline-node
+         ((shading-program-node
+           :parameters '("modelViewProjection"
+                         "normalTransform"
+                         "dLight.ambient"
+                         "dLight.diffuse"
+                         "dLight.direction"
+                         "baseColor")
+           :sources (list
+                     (load-shader-source :vertex-shader
+                                         (resource-truename
+                                          "shaders/v_ball.glsl"))
+                     (load-shader-source :fragment-shader
+                                         (resource-truename
+                                          "shaders/f_ball.glsl"))))
+          ((node :name :place))
+          ((node :name :balls))
+          (stage-mesh))))))
+     (text-node)))))

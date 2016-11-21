@@ -27,8 +27,6 @@
    (audio :initform nil)))
 
 
-
-
 (defmethod make-model-graph ((this ball-model))
   (scenegraph
    (ball-mesh)))

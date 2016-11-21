@@ -12,10 +12,12 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (log4cl cl-bodge cl-fad trivial-garbage)
+  :depends-on (log4cl cl-bodge cl-fad trivial-garbage bordeaux-threads cl-autowrap
+                      cl-plus-c texatl-client cl-conspack)
   :serial t
   :components ((:file "packages")
                (:file "utils")
+               (:file "text")
                (:file "events")
                (:file "camera")
                (:file "chain-registry")

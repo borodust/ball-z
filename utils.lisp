@@ -26,10 +26,7 @@
    (count :initform 0)))
 
 
-(defgeneric dispose-resource (resource obj)
-  (:method ((this shared-resource) obj)
-    (with-slots (resource) this
-      (setf resource nil))))
+(defgeneric dispose-resource (resource obj))
 
 
 (defgeneric acquire-resource (resource)
@@ -44,7 +41,9 @@
     (with-slots (count resource) this
       (decf count)
       (when (= count 0)
-        (dispose-resource this resource)))))
+        (unwind-protect
+             (dispose-resource this resource)
+          (setf resource nil))))))
 
 
 (defgeneric resource-disposed-p (resource)
