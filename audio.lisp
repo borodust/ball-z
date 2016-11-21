@@ -11,7 +11,8 @@
           (setf (ctx-background-audio ctx) source
                 (audio-looped-p source) t
                 (audio-gain source) 0.3)
-          (play-audio source) )))))
+          (play-audio source)
+          (post (make-instance 'game-loaded-event) (ctx-event-system ctx)))))))
 
 
 

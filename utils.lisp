@@ -50,3 +50,25 @@
   (:method ((this shared-resource))
     (with-slots (resource) this
       (null resource))))
+
+
+;;;
+;;;
+;;;
+(defclass enableable-node ()
+  ((enabled-p :initform t :initarg :enabled-p)))
+
+
+(defmethod node-enabled-p ((this enableable-node))
+  (with-slots (enabled-p) this
+    enabled-p))
+
+
+(defun enable-node (node)
+  (with-slots (enabled-p) node
+    (setf enabled-p t)))
+
+
+(defun disable-node (node)
+  (with-slots (enabled-p) node
+    (setf enabled-p nil)))

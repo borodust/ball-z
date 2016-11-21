@@ -1,14 +1,14 @@
 (in-package :ball-z)
 
 
-(defclass text-node (node)
+(defclass text-node (enableable-node node)
   ((tex-atlas :initform nil)
    (mesh :initform nil)
    (program :initform nil)
    (proj :initform (orthographic-projection-mat 640.0 480.0 1.0 -1.0))
-   (pos :initform (vec2))
-   (font :initarg :font :initform "5by7")
-   (text :initform "SCORE 0000")))
+   (pos :initform (vec2) :initarg :position)
+   (font :initarg :font :initform (error "font must be provided"))
+   (text :initarg :text :initform (error "text must be provided"))))
 
 
 (defun %build-texting-program (system)
@@ -84,7 +84,7 @@
     (with-using-shading-program (program)
       (setf (program-uniform-variable program "atlas") 0
             (program-uniform-variable program "proj") proj
-            (program-uniform-variable program "pos") (vec2 -320.0 240.0))
+            (program-uniform-variable program "pos") pos)
       (with-bound-texture (tex-atlas)
         (render mesh))))
   (call-next-method))

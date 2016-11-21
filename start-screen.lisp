@@ -1,7 +1,7 @@
 (in-package :ball-z)
 
 
-(defclass start-screen-node (node)
+(defclass start-screen-node (enableable-node node)
   ((title-tex :initform nil)
    (banner :initform nil)
    (program :initform nil)
@@ -41,4 +41,5 @@
             (program-uniform-variable program "pos") (vec2 -219.5 64.0)
             (program-uniform-variable program "banner") 0)
       (with-bound-texture (title-tex)
-        (render banner)))))
+        (render banner))))
+  (call-next-method))

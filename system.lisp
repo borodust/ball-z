@@ -22,7 +22,9 @@
       (setf physics (engine-system 'physics-system))
       (setf events (engine-system 'event-system))
       (setf audio (engine-system 'audio-system))
-      (register-event-classes events 'chain-broke-event)
+      (register-event-classes events
+                              'chain-broke-event
+                              'game-loaded-event)
 
       (when-all ((-> (host)
                    (setf (viewport-title host) "Ball-Z"))
@@ -45,9 +47,31 @@
         (process-strike b0 b1 reg events)))))
 
 
+(defun throw-ball-action (registry)
+  (lambda (s)
+    (let* ((place (node s :place))
+           (balls (node s :balls))
+           (ball (first (children-of place)))
+           (new-ball (make-instance 'ball-model :simulated-p nil
+                                    :chain-registry registry)))
+      (mt:wait-with-latch (l)
+        (alet ((nil (initialize-tree s new-ball)))
+          (open-latch l)))
+      (abandon place ball)
+      (adopt balls ball)
+      (throw-ball ball)
+      (adopt place new-ball))))
+
+
+(defun start-game-action (sys reg)
+  (lambda (s)
+    (-> (sys :high)
+      (disable-node (node s :start-screen))
+      (bind-key :space (throw-ball-action reg)))))
+
+
 (defun make-default-keymap (registry)
-  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d) (m :m)
-                                            (space :space) (n :n))
+  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d) (m :m) (n :n))
     (setf w (lambda (s)
               (let ((cam (node s :camera)))
                 (pitch-camera cam -0.1)))
@@ -76,20 +100,7 @@
                                                                 (- (random 2.0) 1.0)))
                                                (random 100.0))))
                           (sleep 0.2))))
-                 :name "ball-gen")))
-          space (lambda (s)
-                  (let* ((place (node s :place))
-                         (balls (node s :balls))
-                         (ball (first (children-of place)))
-                         (new-ball (make-instance 'ball-model :simulated-p nil
-                                                  :chain-registry registry)))
-                    (mt:wait-with-latch (l)
-                      (alet ((nil (initialize-tree s new-ball)))
-                        (open-latch l)))
-                    (abandon place ball)
-                    (adopt balls ball)
-                    (throw-ball ball)
-                    (adopt place new-ball))))))
+                 :name "ball-gen"))))))
 
 
 (defmethod make-system-context ((this ball-z))
@@ -112,6 +123,12 @@
           (pitch-camera cam x)
           (move-camera cam y)))
 
+      (subscribe-with-handler-body-to game-loaded-event () events
+        (-> (this :high)
+          (disable-node (node scene :loading-text))
+          (enable-node (node scene :start-text))
+          (bind-key :enter (start-game-action this reg))))
+
       (adopt (node scene :place)
              (make-instance 'ball-model :simulated-p nil
                             :chain-registry (ctx-chain-registry ctx)))
@@ -133,7 +150,6 @@
                   (register-strike ctx b1 b0)))
                nil)))))
 
-
       (subscribe-with-handler-body-to chain-broke-event (ev) events
         (with-accessors ((balls balls-from)) ev
           (-> (this)
@@ -141,9 +157,7 @@
               (abandon (parent-of b) b)
               (discard-node b)))))
 
-
       (load-background-music ctx)
-
 
       (bt:make-thread
        (lambda ()

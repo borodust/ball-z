@@ -43,5 +43,10 @@
          ((node :name :place))
          ((node :name :balls))
          (stage-mesh)))))
-     ((start-screen-node :name :start-screen))
-     (text-node)))))
+     ((start-screen-node :name :start-screen)
+      ((text-node :name :loading-text
+                  :text "LOADING..." :font "anatolian" :position (vec2 -48.0 0.0)))
+      ((text-node :name :start-text
+                  :text "PRESS ENTER TO START" :font "anatolian" :position (vec2 -124.0 0.0)
+                  :enabled-p nil)))
+     ((text-node :text "SCORE 0000" :font "5by7" :position (vec2 -320.0 240.0)))))))

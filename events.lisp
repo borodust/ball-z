@@ -5,7 +5,7 @@
   (balls))
 
 
-(defevent ball-pop-event (event) ())
+(defevent game-loaded-event (event) ())
 
 
-(defevent ball-strike-failed-event (event) ())
+(defevent game-ended-event (event) ())
