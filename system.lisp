@@ -15,6 +15,13 @@
                                    resource-system)))
 
 
+(defun exit-game ()
+  (-> ((engine))
+    (shutdown)
+    (log:debug "Ball-Z stopped")
+    (open-latch *main-latch*)))
+
+
 (defmethod initialize-system :after ((this ball-z))
   (with-slots (events physics audio) this
     (log:config (property :log-level :info))
@@ -32,10 +39,7 @@
                    (setf (gravity) (vec3 0.0 -9.81 0.0))))
 
         (subscribe-with-handler-body-to viewport-hiding-event () events
-          (-> ((engine))
-            (shutdown)
-            (log:debug "Ball-Z stopped")
-            (open-latch *main-latch*)))
+          (exit-game))
         (log:debug "Ball-Z started")))))
 
 
@@ -71,7 +75,8 @@
 
 
 (defun make-default-keymap (registry)
-  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d) (m :m) (n :n))
+  (ge.util:make-hash-table-with-entries () ((w :w) (a :a) (s :s) (d :d) (m :m) (n :n)
+                                            (esc :escape))
     (setf w (lambda (s)
               (let ((cam (node s :camera)))
                 (pitch-camera cam -0.1)))
@@ -87,6 +92,10 @@
           m (lambda (s)
               (let ((frame (node s :wireframe)))
                 (setf (enabledp frame) (not (enabledp frame)))))
+          esc (lambda (s)
+                (declare (ignore s))
+                (exit-game))
+
           n (lambda (s)
               (let ((balls (node s :balls)))
                 (bt:make-thread
