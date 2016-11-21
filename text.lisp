@@ -6,7 +6,9 @@
    (mesh :initform nil)
    (program :initform nil)
    (proj :initform (orthographic-projection-mat 640.0 480.0 1.0 -1.0))
-   (text :initform "Hello, ball world")))
+   (pos :initform (vec2))
+   (font :initarg :font :initform "5by7")
+   (text :initform "SCORE 0000")))
 
 
 (defun %build-texting-program (system)
@@ -44,10 +46,12 @@
 
 
 (defmethod initialize-node :after ((this text-node) (system graphics-system))
-  (with-slots (tex-atlas mesh text program) this
+  (with-slots (tex-atlas mesh text program font) this
     (let ((len (length text)))
       (setf tex-atlas (make-2d-texture system (load-png-image
-                                               (resource-truename "fonts/anatolian.png")) :grey)
+                                               (resource-truename
+                                                (format nil "fonts/~a.png" font)))
+                                       :grey)
             program (%build-texting-program system))
       (let* ((i 0)
              (vertex-count (* len 4))
@@ -56,7 +60,8 @@
              (index-array (make-array (* len 6) :element-type 'integer)))
         (texatl.cl:do-texatl-string (text
                                      x0 y0 x1 y1 u0 v0 u1 v1 :tex-width 256 :tex-height 256)
-            (first (conspack:decode-file (resource-truename "fonts/anatolian.met")))
+            (first (conspack:decode-file (resource-truename
+                                          (format nil "fonts/~a.met" font))))
           (%set-text-vertex-data pos-array i x0 (- y0) x1 (- y1))
           (%set-text-vertex-data tex-array i u0 v0 u1 v1)
           (%set-index-data index-array i)
@@ -75,10 +80,11 @@
 
 
 (defmethod rendering-pass ((this text-node))
-  (with-slots (tex-atlas mesh program proj) this
+  (with-slots (tex-atlas mesh program proj pos) this
     (with-using-shading-program (program)
       (setf (program-uniform-variable program "atlas") 0
-            (program-uniform-variable program "proj") proj)
+            (program-uniform-variable program "proj") proj
+            (program-uniform-variable program "pos") (vec2 -320.0 240.0))
       (with-bound-texture (tex-atlas)
         (render mesh))))
   (call-next-method))

@@ -12,8 +12,9 @@ out v_PerVertex {
 };
 
 uniform mat4 proj;
+uniform vec2 pos;
 
 void main () {
-  gl_Position = proj * vec4(vPosition, 1.0, 1.0);;
+  gl_Position = proj * vec4(vPosition + pos, 1.0, 1.0);;
   texCoord = vTexCoord;
 }
