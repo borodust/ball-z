@@ -12,7 +12,9 @@
   (event-system nil :read-only t)
   (audio-system nil :read-only t)
   (background-audio nil)
-  (strike nil))
+  (strike nil)
+  (score 0)
+  (timer-started nil))
 
 
 (defun bind-key (key action)
@@ -28,3 +30,19 @@
 (defun pop-strike (ctx)
   (prog1 (ctx-strike ctx)
     (setf (ctx-strike ctx) nil)))
+
+
+(defun reset-score (ctx)
+  (setf (ctx-score ctx) 0))
+
+
+(defun update-score (ctx diff)
+  (incf (ctx-score ctx) diff))
+
+
+(defun start-timer (ctx)
+  (setf (ctx-timer-started ctx) (epoch-seconds)))
+
+
+(defun reset-timer (ctx)
+  (setf (ctx-timer-started ctx) nil))

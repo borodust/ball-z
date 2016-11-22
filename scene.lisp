@@ -49,4 +49,7 @@
       ((text-node :name :start-text
                   :text "PRESS ENTER TO START" :font "anatolian" :position (vec2 -124.0 0.0)
                   :enabled-p nil)))
-     ((text-node :text "SCORE 0000" :font "5by7" :position (vec2 -320.0 240.0)))))))
+     ((text-node :name :score
+                 :text "SCORE 0000" :font "5by7" :position (vec2 -320.0 240.0)))
+     ((text-node :name :timer
+                 :text "TIMER 03:00" :font "5by7" :position (vec2 -64.0 240.0)))))))

@@ -45,7 +45,7 @@
             (shading-parameter "modelViewProjection") (mult *projection-matrix*
                                                             (transform-of *camera*)
                                                             *transform-matrix*)
-            (shading-parameter "dLight.ambient") (vec3 0.2 0.2 0.2)
-            (shading-parameter "dLight.diffuse") (vec3 0.8 0.8 0.8)
-            (shading-parameter "dLight.direction") (vec3 -0.57735026 -0.57735026 -0.57735026))
+            (shading-parameter "dLight.ambient") (vec3 0.4 0.4 0.4)
+            (shading-parameter "dLight.diffuse") (vec3 0.5 0.5 0.5)
+            (shading-parameter "dLight.direction") (vec3 0.0 -1.0 0.0))
       (render mesh))))

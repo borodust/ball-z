@@ -23,16 +23,9 @@
 
 (defclass player-camera-node (node)
   ((circle-angle :initform 0.0)
-   (pitch-angle :initform 0.0)
+   (pitch-angle :initform (/ +half-pi+ 4))
    (camera :initform (make-instance 'camera))
    (transform :initform *camera-translation* :reader transform-of)))
-
-
-(defmethod rendering-pass ((this player-camera-node))
-  (with-slots (transform camera) this
-    (update-camera camera transform)
-    (let ((*camera* camera))
-      (call-next-method))))
 
 
 (defun %cache-transform (cam)
@@ -40,6 +33,17 @@
     (setf transform (mult (euler-axis->mat4 #f pitch-angle (vec3 1.0 0.0 0.0))
                           *camera-translation*
                           (euler-axis->mat4 #f circle-angle (vec3 0.0 1.0 0.0))))))
+
+
+(defmethod initialize-instance :after ((this player-camera-node) &key)
+  (%cache-transform this))
+
+
+(defmethod rendering-pass ((this player-camera-node))
+  (with-slots (transform camera) this
+    (update-camera camera transform)
+    (let ((*camera* camera))
+      (call-next-method))))
 
 
 (defun move-camera (cam angle)

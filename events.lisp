@@ -9,3 +9,6 @@
 
 
 (defevent game-ended-event (event) ())
+
+
+(defevent game-started-event (event) ())

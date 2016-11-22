@@ -17,7 +17,7 @@
    (body :initform nil)
    (type :initform (aref *types* (random (length *types*))) :reader ball-type-of)
    (linked-p :initform nil)
-   (last-pos :initform (vec3))
+   (last-pos :initform (vec3) :initarg :position)
    (last-ori :initform (vec3 0.0 0.0 -1.0))
    (virgin-p :initform t :initarg :virgin-p :reader virginp)
    (simulated-p :initform nil :initarg :simulated-p :reader simulatedp)
@@ -32,8 +32,14 @@
    (ball-mesh)))
 
 
-(defun make-ball (reg)
-  (make-instance 'ball-model :simulated-p t :virgin-p nil :chain-registry reg))
+(defun (setf ball-position) (value ball)
+  (with-slots (body) ball
+    (setf (position-of body) value)))
+
+
+(defun make-ball (reg &optional pos)
+  (make-instance 'ball-model :simulated-p t :virgin-p nil :chain-registry reg
+                 :position (or pos (vec3))))
 
 
 (defmethod simulation-pass ((this ball-model))
@@ -65,11 +71,12 @@
 
 
 (defmethod initialize-node :after ((this ball-model) (system physics-system))
-  (with-slots (body chain-registry type) this
+  (with-slots (body chain-registry type last-pos) this
     (setf body (make-instance 'ball-body
                               :physics system
                               :registry chain-registry
-                              :model this))
+                              :model this
+                              :position last-pos))
     (unless (simulatedp this)
       (setf (body-enabled-p body) nil))))
 
