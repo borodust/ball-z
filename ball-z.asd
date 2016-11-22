@@ -12,8 +12,8 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (log4cl cl-bodge cl-fad trivial-garbage bordeaux-threads cl-autowrap
-                      cl-plus-c texatl-client cl-conspack local-time)
+  :depends-on (log4cl cl-bodge cl-fad trivial-garbage bordeaux-threads
+                      texatl-client cl-conspack local-time)
   :serial t
   :components ((:file "packages")
                (:file "utils")

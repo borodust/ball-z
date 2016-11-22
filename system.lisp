@@ -266,7 +266,7 @@
                  (fad:merge-pathnames-as-file working-directory "ball-z.conf"))))
 
 
-(defun main (&rest args)
-  (declare (ignore args))
-  (start)
+(defun main (args)
+  (start (format nil "~a/ball-z.conf"
+                 (truename (fad:merge-pathnames-as-directory (first args)))))
   (wait-for-latch *main-latch*))

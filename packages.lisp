@@ -7,4 +7,5 @@
         :cl :mt)
   (:nicknames :bz)
   (:export ball-z
-           main))
+           main
+           start))
