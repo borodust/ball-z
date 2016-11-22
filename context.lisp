@@ -46,3 +46,8 @@
 
 (defun reset-timer (ctx)
   (setf (ctx-timer-started ctx) nil))
+
+
+(defun execute-key-action (ctx key)
+  (when-let ((action (gethash key (ctx-keymap ctx))))
+    (funcall action (ctx-scene ctx))))

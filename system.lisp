@@ -170,8 +170,26 @@
           (pitch-camera cam x)
           (move-camera cam y)))
 
-      (subscribe-with-handler-body-to game-loaded-event () events
+      (let ((prev-x nil)
+            (prev-y nil))
+        (subscribe-with-handler-body-to cursor-event (ev) events
+          (when (and prev-x prev-y)
+            (let* ((y (* (- (x-from ev) prev-x) 0.006))
+                   (x (* (- (y-from ev) prev-y) 0.0025)))
+              (pitch-camera cam x)
+              (move-camera cam y)))
+          (setf prev-x (x-from ev)
+                prev-y (y-from ev))))
+
+
+      (subscribe-with-handler-body-to mouse-event (ev) events
         (-> (this :high)
+          (when (and (eq :pressed (state-from ev))
+                     (eq :left (button-from ev)))
+            (execute-key-action ctx :space))))
+
+      (subscribe-with-handler-body-to game-loaded-event () events
+        (-> (this)
           (disable-node (node scene :loading-text))
           (enable-node (node scene :start-text))
           (bind-key :enter (start-game-action this reg))))

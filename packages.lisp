@@ -6,4 +6,5 @@
         :ge.util :ge.mem
         :cl :mt)
   (:nicknames :bz)
-  (:export ball-z))
+  (:export ball-z
+           main))
