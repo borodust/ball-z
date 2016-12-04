@@ -13,7 +13,7 @@
 ;;;
 ;;;
 ;;;
-(defclass ball-mesh (node)
+(defclass ball-mesh (scene-node)
   ((path :initform "models/ball.brf" :reader resource-path-of)
    (mesh :initform nil)
    (shared-mesh :initform nil :allocation :class)
@@ -27,7 +27,7 @@
 (defmethod initialize-node :after ((this ball-mesh) (system graphics-system))
   (with-slots (transform bones shared-mesh mesh) this
     (when (or (null shared-mesh) (resource-disposed-p shared-mesh))
-      (multiple-value-bind (mesh chunk-transform) (chunk->mesh system (load-mesh-chunk this))
+      (multiple-value-bind (mesh chunk-transform) (chunk->mesh (load-mesh-chunk this))
         (setf transform chunk-transform)
         (setf shared-mesh (make-instance 'shared-mesh :resource mesh))))
     (setf mesh (acquire-resource shared-mesh))))
@@ -38,7 +38,7 @@
     (release-resource shared-mesh)))
 
 
-(defmethod rendering-pass ((this ball-mesh))
+(defmethod scene-pass ((this ball-mesh) (pass rendering-pass) input)
   (with-slots (transform mesh) this
     (let ((*transform-matrix* (mult *transform-matrix* transform)))
       (setf (shading-parameter "normalTransform") (mat4->mat3 *transform-matrix*)
@@ -48,4 +48,5 @@
             (shading-parameter "dLight.ambient") (vec3 0.4 0.4 0.4)
             (shading-parameter "dLight.diffuse") (vec3 0.5 0.5 0.5)
             (shading-parameter "dLight.direction") (vec3 0.0 -1.0 0.0))
-      (render mesh))))
+      (render mesh)))
+  (call-next-method))

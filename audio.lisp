@@ -5,9 +5,10 @@
   (let ((track (load-ogg-vorbis-audio (resource-truename "sounds/saga_musix_-_megastar.ogg"))))
     (let ((audio (ctx-audio-system ctx)))
       (-> (audio)
-        (let ((source (make-audio-source audio)))
-          (with-disposable ((buf (make-audio-buffer audio track)))
+        (let ((source (make-audio-source)))
+          (with-disposable ((buf (make-audio-buffer track)))
             (attach-audio-buffer buf source))
+
           (setf (ctx-background-audio ctx) source
                 (audio-looped-p source) t
                 (audio-gain source) 0.3)

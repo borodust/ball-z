@@ -2,6 +2,7 @@
 
 
 (defvar *main-latch* (make-latch))
+(defvar *frame-time* 0)
 
 
 (defclass ball-z (thread-bound-system)
@@ -12,11 +13,15 @@
                                    graphics-system
                                    physics-system
                                    audio-system
-                                   resource-system)))
+                                   asset-system)))
+
+
+(definline ball-z ()
+  (engine-system 'ball-z))
 
 
 (defun exit-game ()
-  (-> ((engine))
+  (in-new-thread-waiting "exit-worker"
     (shutdown)
     (log:debug "Ball-Z stopped")
     (open-latch *main-latch*)))
@@ -35,15 +40,15 @@
                               'game-started-event
                               'game-ended-event)
 
-      (when-all ((-> (host)
-                   (setf (viewport-title host) "Ball-Z")
-                   (lock-cursor host))
-                 (-> (physics)
-                   (setf (gravity) (vec3 0.0 -9.81 0.0))))
+      (-> (host)
+        (setf (viewport-title) "Ball-Z")
+        (lock-cursor))
+      (-> (physics)
+        (setf (gravity) (vec3 0.0 -9.81 0.0)))
 
-        (subscribe-with-handler-body-to viewport-hiding-event () events
-          (exit-game))
-        (log:debug "Ball-Z started")))))
+      (subscribe-body-to (viewport-hiding-event ()) events
+        (exit-game)))
+    (log:debug "Ball-Z started")))
 
 
 (defun strike (ctx)
@@ -61,18 +66,17 @@
            (ball (first (children-of place)))
            (new-ball (make-instance 'ball-model :simulated-p nil
                                     :chain-registry registry)))
-      (mt:wait-with-latch (l)
-        (alet ((nil (initialize-tree s new-ball)))
-          (open-latch l)))
-      (abandon place ball)
-      (adopt balls ball)
-      (throw-ball ball)
-      (adopt place new-ball))))
+      (-> ((ball-z))
+        (initialize-tree new-ball (graphics) (physics) (audio))
+        (abandon place ball)
+        (adopt balls ball)
+        (throw-ball ball)
+        (adopt place new-ball)))))
 
 
 (defun start-game-action (sys reg)
   (lambda (s)
-    (-> (sys :high)
+    (-> (sys :priority :high)
       (disable-node (node s :start-screen))
       (bind-key :space (throw-ball-action reg))
       (post (make-instance 'game-started-event) (event-system-of sys)))))
@@ -85,18 +89,24 @@
     (flet ((%gen ()
              (bt:make-thread
               (lambda ()
-                (loop repeat 64 do
-                     (let ((b (make-ball registry)))
-                       (when-all ((initialize-tree s b))
-                         (adopt balls b)
-                         (push-ball b (mult (normalize (vec3 (- (random 2.0) 1.0)
-                                                             (random 1.0)
-                                                             (- (random 2.0) 1.0)))
-                                            (random 100.0))))
-                       (sleep 0.1)))))))
-      (%gen)
-      (%gen)
-     :name "ball-gen")))
+                (let ((gx (graphics))
+                      (phx (physics)))
+                  (loop repeat 64 do
+                       (let ((b (make-ball registry)))
+                         (-> ((engine))
+                           (initialize-tree b gx phx (ctx-audio-system ctx))
+                           (adopt balls b)
+                           (push-ball b (mult (normalize (vec3 (- (random 2.0) 1.0)
+                                                               (random 1.0)
+                                                               (- (random 2.0) 1.0)))
+                                              (random 100.0))))
+                         (sleep 0.1))))))))
+      (in-new-thread "ball-gen"
+        (%gen)
+        (sleep 1)
+        (%gen)
+        (sleep 1)
+        (%gen)))))
 
 
 (defun remove-balls (ctx)
@@ -149,22 +159,19 @@
                 (declare (ignore s))
                 (exit-game)))))
 
-
-(defmethod make-system-context ((this ball-z))
+(defun init (this ctx)
   (with-slots (events physics audio) this
-    (let* ((scene (make-main-scene))
+    (let* ((scene (ctx-scene ctx))
            (cam (node scene :camera))
-           (reg (make-instance 'chain-registry))
-           (ctx (make-ball-z-context scene (make-default-keymap) reg
-                                     events audio)))
+           (reg (ctx-chain-registry ctx)))
 
-      (subscribe-with-handler-body-to keyboard-event (ev) events
+      (subscribe-body-to (keyboard-event () ev) events
         (ge.util:with-hash-entries ((key-fn (key-from ev))) (ctx-keymap ctx)
           (let ((fn key-fn))
             (when (and fn (eq :pressed (state-from ev)))
               (funcall fn scene)))))
 
-      (subscribe-with-handler-body-to scroll-event (ev) events
+      (subscribe-body-to (scroll-event () ev) events
         (let* ((y (* (x-offset-from ev) 0.005))
                (x (* (y-offset-from ev) 0.005)))
           (pitch-camera cam x)
@@ -172,7 +179,7 @@
 
       (let ((prev-x nil)
             (prev-y nil))
-        (subscribe-with-handler-body-to cursor-event (ev) events
+        (subscribe-body-to (cursor-event () ev) events
           (when (and prev-x prev-y)
             (let* ((y (* (- (x-from ev) prev-x) 0.006))
                    (x (* (- (y-from ev) prev-y) 0.0025)))
@@ -182,21 +189,23 @@
                 prev-y (y-from ev))))
 
 
-      (subscribe-with-handler-body-to mouse-event (ev) events
-        (-> (this :high)
+      (subscribe-body-to (mouse-event () ev) events
+        (-> ((engine))
           (when (and (eq :pressed (state-from ev))
                      (eq :left (button-from ev)))
             (execute-key-action ctx :space))))
 
-      (subscribe-with-handler-body-to game-loaded-event () events
-        (-> (this)
+      (subscribe-body-to (game-loaded-event ()) events
+        (-> (this :priority :high)
           (disable-node (node scene :loading-text))
           (enable-node (node scene :start-text))
           (bind-key :enter (start-game-action this reg))))
 
-      (adopt (node scene :place)
-             (make-instance 'ball-model :simulated-p nil
-                            :chain-registry (ctx-chain-registry ctx)))
+      (-> (this)
+        (let ((node (make-instance 'ball-model :simulated-p nil
+                            :chain-registry (ctx-chain-registry ctx))))
+          (initialize-tree node (physics) (graphics) (audio))
+          (adopt (node scene :place) node)))
 
       (-> (physics)
         (register-collision-callback
@@ -215,7 +224,7 @@
                   (register-strike ctx b1 b0)))
                nil)))))
 
-      (subscribe-with-handler-body-to chain-broke-event (ev) events
+      (subscribe-body-to (chain-broke-event () ev) events
         (with-accessors ((balls balls-from)) ev
           (-> (this)
             (update-score ctx (* (length balls) 10))
@@ -223,35 +232,52 @@
               (abandon (parent-of b) b)
               (discard-node b)))))
 
-      (subscribe-with-handler-body-to game-started-event () events
-        (-> (this :high)
+      (subscribe-body-to (game-started-event ()) events
+        (-> (this :priority :high)
+          (bind-key :enter (lambda (s) (declare (ignore s))))
           (remove-balls ctx)
           (reset-score ctx)
           (start-timer ctx)
           (generate-balls ctx)))
 
-      (subscribe-with-handler-body-to game-ended-event () events
-        (-> (this :high)
+      (subscribe-body-to (game-ended-event ()) events
+        (-> (this :priority :high)
           (reset-timer ctx)
+          (bind-key :enter (start-game-action this reg))
           (bind-key :space (lambda (s) (declare (ignore s))))
           (enable-node (node scene :start-screen))))
 
-      (load-background-music ctx)
+      (in-new-thread "music-loader"
+        (load-background-music ctx))
 
       (bt:make-thread
        (lambda ()
          (let ((reg (ctx-chain-registry ctx)))
            (loop while (enabledp this) do
-                (-> (physics)
-                  (clear-links reg)
-                  (observe-universe 0.014)
-                  (make-chains reg)
-                  (strike ctx))
-                (animate scene)
-                (update-timer ctx)
-                (display-score ctx)
-                (sleep 0.012))))
+                (-> (this :priority :low)
+                  (let ((start-time (epoch-seconds)))
+                    (-> (physics :priority :low)
+                      (clear-links reg)
+                      (observe-universe 0.016)
+                      (make-chains reg)
+                      (strike ctx))
+                    (animate scene)
+                    (update-timer ctx)
+                    (display-score ctx)
+                    (setf *frame-time* (- (epoch-seconds) start-time))))
+                (sleep 0.016))))
+
        :name "scene-worker")
+      ctx)))
+
+(defmethod make-system-context ((this ball-z))
+  (with-slots (events physics audio) this
+
+    (let ((ctx (make-ball-z-context (make-default-keymap) (make-instance 'chain-registry)
+                                    events audio)))
+      (-> (this)
+        (setf (ctx-scene ctx) (make-main-scene))
+        (init this ctx))
       ctx)))
 
 

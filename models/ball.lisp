@@ -42,7 +42,7 @@
                  :position (or pos (vec3))))
 
 
-(defmethod simulation-pass ((this ball-model))
+(defmethod scene-pass ((this ball-model) (pass simulation-pass) input)
   (with-slots (sim-actions body linked-p) this
     (loop for fn in sim-actions
        do (funcall fn)
@@ -50,10 +50,10 @@
     (when (simulatedp this)
       (setf (transform-of this) (transform-of body)
             linked-p (linked-body-p body))))
-  (call-next-method))
+  (call-next-method this pass input))
 
 
-(defmethod rendering-pass ((this ball-model))
+(defmethod scene-pass ((this ball-model) (pass rendering-pass) input)
   (with-slots (last-pos last-ori type linked-p) this
     (setf (shading-parameter "baseColor") (mult (cdr (assoc type *colors*))
                                                 (if linked-p 5.0 1.0)))
@@ -62,8 +62,8 @@
           (call-next-method)
           (let* ((inverse-cam (inverse (transform-of *camera*)))
                  (*transform-matrix* (mult inverse-cam
-                                            *transform-matrix*
-                                            (vec->translation-mat4 (vec3 0.0 -1.0 -2.0)))))
+                                           *transform-matrix*
+                                           (vec->translation-mat4 (vec3 0.0 -1.0 -2.0)))))
             (setf last-pos (make-vec3 (mult *transform-matrix* (vec4 0.0 0.0 0.0 1.0)))
                   last-ori (normalize (mult (make-mat3 *transform-matrix*)
                                             (vec3 0.0 0.0 -1.0))))
@@ -73,7 +73,6 @@
 (defmethod initialize-node :after ((this ball-model) (system physics-system))
   (with-slots (body chain-registry type last-pos) this
     (setf body (make-instance 'ball-body
-                              :physics system
                               :registry chain-registry
                               :model this
                               :position last-pos))
@@ -84,7 +83,7 @@
 (defmethod initialize-node :after ((this ball-model) (system audio-system))
   (with-slots (sounds audio) this
     (setf audio system
-          sounds (make-instance 'ball-audio :audio system))))
+          sounds (make-instance 'ball-audio))))
 
 
 (defmethod discard-node :before ((this ball-model))

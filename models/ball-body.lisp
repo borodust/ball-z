@@ -9,11 +9,11 @@
    (registry :initarg :registry)))
 
 
-(defmethod initialize-instance :after ((this ball-body) &key physics model position)
+(defmethod initialize-instance :after ((this ball-body) &key model position)
   (with-slots (r-body geom bounds registry) this
-    (setf r-body (make-rigid-body physics)
-          geom (make-sphere-geom physics 0.5)
-          bounds (make-sphere-geom physics 0.575))
+    (setf r-body (make-rigid-body)
+          geom (make-sphere-geom 0.5)
+          bounds (make-sphere-geom 0.575))
     (register-bounding-geom registry bounds model)
     (register-model-geom registry model geom)
     (setf (mass-of r-body) (make-sphere-mass 1.0 0.5))

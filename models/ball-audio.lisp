@@ -24,20 +24,20 @@
   (release-resource shared-fail))
 
 
-(defun %make-shared-audio-source (audio path)
+(defun %make-shared-audio-source (path)
   (let* ((track (load-ogg-vorbis-audio (resource-truename path)))
-         (source (make-audio-source audio)))
-    (with-disposable ((buf (make-audio-buffer audio track)))
+         (source (make-audio-source)))
+    (with-disposable ((buf (make-audio-buffer track)))
       (attach-audio-buffer buf source))
     (make-instance 'shared-audio :resource source)))
 
 
-(defmethod initialize-instance :after ((this ball-audio) &key audio)
+(defmethod initialize-instance :after ((this ball-audio) &key)
   (with-slots (shared-pop shared-strike shared-fail pop strike fail) this
     (when (or (null shared-pop) (resource-disposed-p shared-pop))
-      (setf shared-pop (%make-shared-audio-source audio "sounds/ball-pop.ogg")
-            shared-strike (%make-shared-audio-source audio "sounds/ball-explosion.ogg")
-            shared-fail (%make-shared-audio-source audio "sounds/strike-fail.ogg")))
+      (setf shared-pop (%make-shared-audio-source "sounds/ball-pop.ogg")
+            shared-strike (%make-shared-audio-source "sounds/ball-explosion.ogg")
+            shared-fail (%make-shared-audio-source "sounds/strike-fail.ogg")))
     (setf pop (acquire-resource shared-pop)
           strike (acquire-resource shared-strike)
           fail (acquire-resource shared-fail))))

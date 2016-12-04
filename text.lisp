@@ -1,7 +1,7 @@
 (in-package :ball-z)
 
 
-(defclass text-node (enableable-node node)
+(defclass text-node (enableable-node scene-node)
   ((tex-atlas :initform nil)
    (mesh :initform nil)
    (program :initform nil)
@@ -14,11 +14,11 @@
    (graphics :initform nil)))
 
 
-(defun %build-texting-program (system)
+(defun %build-texting-program ()
   (make-shading-program
-   system
-   (load-shader-source :vertex-shader (resource-truename "shaders/v_text.glsl"))
-   (load-shader-source :fragment-shader (resource-truename "shaders/f_text.glsl"))))
+   (list
+    (load-shader-source :vertex-shader (resource-truename "shaders/v_text.glsl"))
+    (load-shader-source :fragment-shader (resource-truename "shaders/f_text.glsl")))))
 
 
 (defun %set-text-vertex-data (arr i x0 y0 x1 y1)
@@ -54,7 +54,7 @@
 
 
 (defun %update-text (node new-text)
-  (with-slots (mesh text last-text font-metrics (system graphics)) node
+  (with-slots (mesh text last-text font-metrics) node
     (when mesh
       (dispose mesh))
     (setf text new-text
@@ -72,21 +72,20 @@
         (%set-text-vertex-data tex-array i u0 (- 1.0 v0) u1 (- 1.0 v1))
         (%set-index-data index-array i)
         (incf i))
-      (setf mesh (make-mesh system vertex-count :triangles index-array))
-      (with-disposable ((vbuf (make-array-buffer system 0 pos-array))
-                        (tbuf (make-array-buffer system 1 tex-array)))
-        (attach-gpu-buffer vbuf mesh)
-        (attach-gpu-buffer tbuf mesh)))))
+      (setf mesh (make-mesh vertex-count :triangles index-array))
+      (with-disposable ((vbuf (make-array-buffer pos-array))
+                        (tbuf (make-array-buffer tex-array)))
+        (attach-array-buffer vbuf mesh 0)
+        (attach-array-buffer tbuf mesh 1)))))
 
 
 (defmethod initialize-node :after ((this text-node) (system graphics-system))
   (with-slots (tex-atlas program font font-metrics graphics) this
-    (setf tex-atlas (make-2d-texture system (load-png-image
-                                             (resource-truename
-                                              (format nil "fonts/~a.png" font)))
+    (setf tex-atlas (make-2d-texture (load-png-image
+                                      (resource-truename
+                                       (format nil "fonts/~a.png" font)))
                                      :grey)
-          program (%build-texting-program system)
-          graphics system
+          program (%build-texting-program)
           font-metrics (first (conspack:decode-file (resource-truename
                                                      (format nil "fonts/~a.met" font)))))))
 
@@ -97,7 +96,7 @@
     (dispose tex-atlas)))
 
 
-(defmethod rendering-pass ((this text-node))
+(defmethod scene-pass ((this text-node) (pass rendering-pass) input)
   (with-slots (tex-atlas mesh program proj pos text last-text) this
     (when (string/= text last-text)
       (%update-text this text))

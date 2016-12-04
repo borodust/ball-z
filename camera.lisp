@@ -21,7 +21,7 @@
                                          (vec3 0.0 0.0 -1.0)))))))
 
 
-(defclass player-camera-node (node)
+(defclass player-camera-node (scene-node)
   ((circle-angle :initform 0.0)
    (pitch-angle :initform (/ +half-pi+ 4))
    (camera :initform (make-instance 'camera))
@@ -39,7 +39,7 @@
   (%cache-transform this))
 
 
-(defmethod rendering-pass ((this player-camera-node))
+(defmethod scene-pass ((this player-camera-node) (pass rendering-pass) input)
   (with-slots (transform camera) this
     (update-camera camera transform)
     (let ((*camera* camera))
