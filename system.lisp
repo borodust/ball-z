@@ -281,7 +281,7 @@
       ctx)))
 
 
-(defmethod destroy-system-context (ctx (this ball-z))
+(defmethod destroy-system-context ((this ball-z) ctx)
   (stop-background-music ctx)
   (dispose (ctx-scene ctx)))
 
