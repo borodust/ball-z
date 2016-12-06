@@ -1,6 +1,6 @@
-#!/usr/bin/env sbcl --script
+#!/usr/bin/env bash
 
-(load "~/quicklisp/setup.lisp")
+WORK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-(ql:quickload :ball-z)
-(bz::main)
+cd $WORK_DIR
+./ball-z.bin ball-z.conf

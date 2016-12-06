@@ -286,13 +286,11 @@
   (dispose (ctx-scene ctx)))
 
 
-(defun start (&optional (working-directory *default-pathname-defaults*))
+(defun start (configuration-pathname)
   (log:config :sane2)
-  (startup (setf *configuration-pathname*
-                 (fad:merge-pathnames-as-file working-directory "ball-z.conf"))))
+  (startup (setf *configuration-pathname* configuration-pathname)))
 
 
 (defun main (args)
-  (start (format nil "~a/ball-z.conf"
-                 (truename (fad:merge-pathnames-as-directory (first args)))))
+  (start (merge-pathnames (second args) (uiop:getcwd)))
   (wait-for-latch *main-latch*))
