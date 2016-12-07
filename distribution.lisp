@@ -5,4 +5,5 @@
     :entry-function (:bz main)
     :assets ("ball-z.conf"
              "run.sh"
-             ("resources" "assets")))
+             ("resources" "assets"))
+    :bundle (:name "Ball-Z" :run-file "run.sh"))
