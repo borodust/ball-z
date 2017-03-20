@@ -3,13 +3,10 @@
 
 (defstruct (ball-z-ctx
              (:conc-name ctx-)
-             (:constructor make-ball-z-context (keymap chain-registry
-                                                       event-system
-                                                       audio-system)))
+             (:constructor make-ball-z-context (keymap chain-registry)))
   (keymap nil :read-only t)
   (chain-registry nil :read-only t)
-  (event-system nil :read-only t)
-  (audio-system nil :read-only t)
+  (metrics (make-metrics-registry) :read-only t)
   (background-audio nil)
   (strike nil)
   (score 0)

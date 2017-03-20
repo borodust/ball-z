@@ -1,22 +1,14 @@
 (in-package :ball-z)
 
 ;;
-;; todo: make thread safe?
 ;;
-(defclass chain-registry ()
-  ((lock :initform (bt:make-recursive-lock "chain-reg-lock"))
-   (b-geoms :initform (tg:make-weak-hash-table :weakness :key :test 'eq))
+;;
+(defclass chain-registry (lockable)
+  ((b-geoms :initform (tg:make-weak-hash-table :weakness :key :test 'eq))
    (links :initform '())
    (geom-chain :initform (make-hash-table :test 'eq))
    (chains :initform (make-hash-table :test 'eql))
    (geom-model :initform (tg:make-weak-hash-table :weakness :value :test 'eq))))
-
-
-(defmacro %with-locked-registry ((reg) &body body)
-  (with-gensyms (lock)
-    `(with-slots ((,lock lock)) ,reg
-       (bt:with-recursive-lock-held (,lock)
-         ,@body))))
 
 
 (defun register-bounding-geom (registry geom model)
@@ -47,7 +39,7 @@
 
 
 (defun process-bounds-collision (reg this-geom that-geom)
-  (%with-locked-registry (reg)
+  (with-instance-lock-held (reg)
     (with-slots (b-geoms) reg
       (with-hash-entries ((this-model this-geom) (that-model that-geom)) b-geoms
         (when (or this-model that-model)
@@ -60,7 +52,7 @@
 
 
 (defun clear-links (reg)
-  (%with-locked-registry (reg)
+  (with-instance-lock-held (reg)
     (with-slots (links chains geom-chain) reg
       (setf links '())
       (clrhash geom-chain)
@@ -73,7 +65,7 @@
 
 
 (defun make-chains (reg)
-  (%with-locked-registry (reg)
+  (with-instance-lock-held (reg)
     (with-slots (links chains geom-chain) reg
       (let ((links links)
             (chains chains)

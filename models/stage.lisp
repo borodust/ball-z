@@ -8,18 +8,36 @@
    (geoms :initform '())))
 
 
-(defmethod initialize-node :after ((this stage-mesh) (system physics-system))
+(defmethod initialization-flow ((this stage-mesh) &key)
   (with-slots (geoms) this
-    (setf geoms (list
-                 (make-plane-geom 0.0 0.9803922 -0.19607845 -2.0)
-                 (make-plane-geom 0.19607845 0.9803922 0.0 -2.0)
-                 (make-plane-geom 0.0 0.9803922 0.19607845 -2.0)
-                 (make-plane-geom -0.19607845 0.9803922 0.0 -2.0)
+    (>> (call-next-method)
+        (-> ((physics)) ()
+          (setf geoms (list
+                       (make-instance 'plane-geom :normal (vec3 0.0 0.9803922 -0.19607845)
+                                      :offset -2.0)
+                       (make-instance 'plane-geom :normal (vec3 0.19607845 0.9803922 0.0)
+                                      :offset -2.0)
+                       (make-instance 'plane-geom :normal (vec3 0.0 0.9803922 0.19607845)
+                                      :offset -2.0)
+                       (make-instance 'plane-geom :normal (vec3 -0.19607845 0.9803922 0.0)
+                                      :offset -2.0)
 
-                 (make-plane-geom 0.0 0.0 1.0 -10.0)
-                 (make-plane-geom 0.0 0.0 -1.0 -10.0)
-                 (make-plane-geom 1.0 0.0 0.0 -10.0)
-                 (make-plane-geom -1.0 0.0 0.0 -10.0)))))
+                       (make-instance 'plane-geom :normal (vec3 0.0 0.0 1.0)
+                                      :offset -10.0)
+                       (make-instance 'plane-geom :normal (vec3 0.0 0.0 -1.0)
+                                      :offset -10.0)
+                       (make-instance 'plane-geom :normal (vec3 1.0 0.0 0.0)
+                                      :offset -10.0)
+                       (make-instance 'plane-geom :normal (vec3 -1.0 0.0 0.0)
+                                      :offset -10.0)))))))
+
+
+(defmethod collide ((this plane-geom) that)
+  nil)
+
+
+(defmethod collide (this (that plane-geom))
+  (collide that this))
 
 
 (defmethod discard-node :before ((this stage-mesh))
@@ -28,7 +46,7 @@
       (dispose g))))
 
 
-(defmethod make-node-mesh ((this stage-mesh) system)
+(defmethod make-node-mesh ((this stage-mesh))
   (let ((mesh (make-mesh 12 :triangles)))
     (with-disposable ((vbuf (make-array-buffer
                              (make-array '(12 3) :element-type 'single-float
@@ -73,13 +91,13 @@
 
 (defmethod scene-pass ((this stage-mesh) (pass rendering-pass) input)
   (with-slots (transform) this
-    (let ((*transform-matrix* (mult *transform-matrix* transform)))
-      (setf (shading-parameter "normalTransform") (mat4->mat3 *transform-matrix*)
+    (let ((*model-matrix* (mult *model-matrix* transform)))
+      (setf (shading-parameter "normalTransform") (mat4->mat3 *model-matrix*)
             (shading-parameter "modelViewProjection") (mult *projection-matrix*
                                                             (transform-of *camera*)
-                                                            *transform-matrix*)
-            (shading-parameter "dLight.ambient") (vec3 0.2 0.2 0.2)
-            (shading-parameter "dLight.diffuse") (vec3 0.8 0.8 0.8)
+                                                            *model-matrix*)
+            (shading-parameter "dLight.ambient") (vec4 0.2 0.2 0.2 1.0)
+            (shading-parameter "dLight.diffuse") (vec4 0.8 0.8 0.8 1.0)
             (shading-parameter "dLight.direction") (vec3 -0.57735026 -0.57735026 -0.57735026))
-        (setf (shading-parameter "baseColor") (vec3 0.8 0.8 0.8))
+        (setf (shading-parameter "baseColor") (vec4 0.8 0.8 0.8 1.0))
       (call-next-method))))

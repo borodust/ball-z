@@ -11,14 +11,15 @@ out gl_PerVertex {
 };
 
 out v_PerVertex {
-  vec3 color;
+  vec4 color;
 };
 
 uniform mat4 modelViewProjection;
 uniform mat3 normalTransform;
-uniform vec3 baseColor;
+uniform vec4 baseColor;
+uniform DirectionalLight dLight;
 
 void main() {
-  color = computeLight(baseColor, normalTransform * vNormal);
+  color = computeLight(baseColor, normalTransform * vNormal, dLight);
   gl_Position = modelViewProjection * vec4(vPosition, 1.0);
 }

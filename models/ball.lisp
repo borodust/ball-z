@@ -4,11 +4,11 @@
 ;;;
 ;;;
 ;;;
-(defvar *colors* (list (cons :red (vec3 1.0 0.0 0.0))
-                       (cons :green (vec3 0.0 1.0 0.0))
-                       (cons :blue (vec3 0.0 0.0 1.0))
-                       (cons :white (vec3 1.0 1.0 1.0))
-                       (cons :yellow (vec3 1.0 1.0 0.0))))
+(defvar *colors* (list (cons :red (vec4 1.0 0.0 0.0 1.0))
+                       (cons :green (vec4 0.0 1.0 0.0 1.0))
+                       (cons :blue (vec4 0.0 0.0 1.0 1.0))
+                       (cons :white (vec4 1.0 1.0 1.0 1.0))
+                       (cons :yellow (vec4 1.0 1.0 0.0 1.0))))
 
 (defvar *types* #(:red :green :blue :white :yellow))
 
@@ -27,7 +27,7 @@
    (audio :initform nil)))
 
 
-(defmethod make-model-graph ((this ball-model))
+(defmethod model-graph-assembly-flow ((this ball-model))
   (scenegraph
    (ball-mesh)))
 
@@ -37,9 +37,24 @@
     (setf (position-of body) value)))
 
 
-(defun make-ball (reg &optional pos)
-  (make-instance 'ball-model :simulated-p t :virgin-p nil :chain-registry reg
+(defun ball-assembly-flow (reg &optional pos)
+  (assembly-flow 'ball-model :simulated-p t :virgin-p nil :chain-registry reg
                  :position (or pos (vec3))))
+
+
+(defmethod initialization-flow ((this ball-model) &key)
+  (with-slots (body chain-registry type last-pos sounds audio) this
+    (~> (call-next-method)
+        (-> ((physics)) ()
+          (setf body (make-instance 'ball-body
+                                    :registry chain-registry
+                                    :model this
+                                    :position last-pos))
+          (unless (simulatedp this)
+            (setf (body-enabled-p body) nil)))
+        (-> ((audio)) ()
+          (setf audio (audio)
+                sounds (make-instance 'ball-audio))))))
 
 
 (defmethod scene-pass ((this ball-model) (pass simulation-pass) input)
@@ -57,33 +72,17 @@
   (with-slots (last-pos last-ori type linked-p) this
     (setf (shading-parameter "baseColor") (mult (cdr (assoc type *colors*))
                                                 (if linked-p 5.0 1.0)))
-    (let ((*transform-matrix* (mult *transform-matrix* (transform-of this))))
+    (let ((*model-matrix* (mult *model-matrix* (transform-of this))))
       (if (simulatedp this)
           (call-next-method)
           (let* ((inverse-cam (inverse (transform-of *camera*)))
-                 (*transform-matrix* (mult inverse-cam
-                                           *transform-matrix*
-                                           (vec->translation-mat4 (vec3 0.0 -1.0 -2.0)))))
-            (setf last-pos (make-vec3 (mult *transform-matrix* (vec4 0.0 0.0 0.0 1.0)))
-                  last-ori (normalize (mult (make-mat3 *transform-matrix*)
+                 (*model-matrix* (mult inverse-cam
+                                           *model-matrix*
+                                           (vec->translation-mat4 (vec3 0.0 -1.0 -2.5)))))
+            (setf last-pos (make-vec3 (mult *model-matrix* (vec4 0.0 0.0 0.0 1.0)))
+                  last-ori (normalize (mult (make-mat3 *model-matrix*)
                                             (vec3 0.0 0.0 -1.0))))
             (call-next-method))))))
-
-
-(defmethod initialize-node :after ((this ball-model) (system physics-system))
-  (with-slots (body chain-registry type last-pos) this
-    (setf body (make-instance 'ball-body
-                              :registry chain-registry
-                              :model this
-                              :position last-pos))
-    (unless (simulatedp this)
-      (setf (body-enabled-p body) nil))))
-
-
-(defmethod initialize-node :after ((this ball-model) (system audio-system))
-  (with-slots (sounds audio) this
-    (setf audio system
-          sounds (make-instance 'ball-audio))))
 
 
 (defmethod discard-node :before ((this ball-model))
@@ -98,15 +97,6 @@
        (push (lambda () ,@body) ,a))))
 
 
-(defun throw-ball (ball)
-  (with-slots (sim-actions body simulated-p last-pos last-ori audio sounds) ball
-    (when-simulating (ball)
-      (setf (position-of body) last-pos))
-    (-> (audio)
-      (play-pop-sound sounds))
-    (push-ball ball (mult last-ori 3000.0))))
-
-
 (defun push-ball (ball f-vec)
   (with-slots (body simulated-p) ball
     (when-simulating (ball)
@@ -116,6 +106,15 @@
       (push-body body f-vec))))
 
 
+(defun throw-ball (ball)
+  (with-slots (sim-actions body simulated-p last-pos last-ori audio sounds) ball
+    (when-simulating (ball)
+      (setf (position-of body) last-pos))
+    (run (-> (audio) ()
+           (play-pop-sound sounds)))
+    (push-ball ball (mult last-ori 3000.0))))
+
+
 (defun loose-virginity (ball)
   (with-slots (virgin-p) ball
     (setf virgin-p nil)))
@@ -123,14 +122,14 @@
 
 (defun process-strike (virgin other reg events)
   (loose-virginity virgin)
-    (with-slots (body audio sounds) other
-      (if (eq (ball-type-of virgin)
-              (ball-type-of other))
-          (when-let ((balls (find-model-chain-by-bounding-geom reg (bounds-of body))))
-            (pushnew virgin balls)
-            (when (> (length balls) 2)
-              (post (make-chain-broke-event balls) events)
-              (-> (audio)
-                (play-strike-sound sounds))))
-          (-> (audio)
-            (play-fail-sound sounds)))))
+  (with-slots (body audio sounds) other
+    (if (eq (ball-type-of virgin)
+            (ball-type-of other))
+        (when-let ((balls (find-model-chain-by-bounding-geom reg (bounds-of body))))
+          (pushnew virgin balls)
+          (when (> (length balls) 2)
+            (post (make-chain-broke-event balls) events)
+            (run (-> (audio) ()
+                   (play-strike-sound sounds)))))
+        (run (-> (audio) ()
+               (play-fail-sound sounds))))))

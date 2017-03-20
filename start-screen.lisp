@@ -2,44 +2,30 @@
 
 
 (defclass start-screen-node (enableable-node scene-node)
-  ((title-tex :initform nil)
-   (banner :initform nil)
-   (program :initform nil)
-   (proj :initform (orthographic-projection-mat 640.0 480.0 1.0 -1.0))))
+  ((anatolian-renderer :initform nil)
+   (canvas :initform nil)
+   (image-paint :initform nil)))
 
 
-(defun %build-banner-program ()
-  (make-shading-program
-   (list
-    (load-shader-source :vertex-shader (resource-truename "shaders/v_banner.glsl"))
-    (load-shader-source :fragment-shader (resource-truename "shaders/f_banner.glsl")))))
-
-
-(defmethod initialize-node ((this start-screen-node) (system graphics-system))
-  (with-slots (title-tex banner program) this
-    (setf title-tex (make-2d-texture (load-png-image
-                                      (resource-truename "images/ball-z.png"))
-                                     :rgba)
-          banner (make-mesh 4 :triangle-strip)
-          program (%build-banner-program))
-    (with-disposable ((vbuf (make-array-buffer #2a((439.0 0.0)
-                                                   (439.0 105.0)
-                                                   (0.0 0.0)
-                                                   (0.0 105.0))))
-                      (tbuf (make-array-buffer #2a((1.0 0.0)
-                                                   (1.0 1.0)
-                                                   (0.0 0.0)
-                                                   (0.0 1.0)))))
-      (attach-array-buffer vbuf banner 0)
-      (attach-array-buffer tbuf banner 1))))
+(defmethod initialization-flow ((this start-screen-node) &key)
+  (with-slots (anatolian-renderer canvas image-paint) this
+    (>> (call-next-method)
+        (asset-flow (font-asset-id "Anatolian.ttf"))
+        (-> ((graphics)) (anatolian-font)
+          ;; fixme: load thru assets
+          (let ((banner (load-png-image (resource-truename "images/ball-z.png"))))
+            (setf anatolian-renderer (make-text-renderer 640 480 anatolian-font 24)
+                  canvas (make-canvas 640 480 :antialiased t)
+                  image-paint (make-image-paint banner
+                                                :origin (vec2 (- 320 (/ 439 2)) 240)
+                                                :flip-vertically t
+                                                :canvas canvas)))))))
 
 
 (defmethod scene-pass ((this start-screen-node) (pass rendering-pass) input)
-  (with-slots (title-tex banner proj program) this
-    (with-using-shading-program (program)
-      (setf (program-uniform-variable program "proj") proj
-            (program-uniform-variable program "pos") (vec2 -219.5 64.0)
-            (program-uniform-variable program "banner") 0)
-      (with-bound-texture (title-tex)
-        (render banner))))
+  (with-slots (anatolian-renderer image-paint canvas) this
+    (draw-text anatolian-renderer "PRESS ENTER TO START" :position (vec2 (- 320 124) 240))
+
+    (with-canvas (canvas)
+      (draw-rect (vec2 (- 320 (/ 439 2)) 240) 439 105 :fill-paint image-paint)))
   (call-next-method))

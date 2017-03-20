@@ -4,13 +4,9 @@
 (define-constant +half-pi+ (/ pi 2))
 
 
-(defvar *configuration-pathname* nil)
-
-
 (defun resource-truename (relative-path)
   (fad:merge-pathnames-as-file
-   *configuration-pathname*
-   (property :assets "resources/")
+   (merge-working-pathname (property :assets "resources/"))
    relative-path))
 
 
@@ -55,20 +51,3 @@
 ;;;
 ;;;
 ;;;
-(defclass enableable-node ()
-  ((enabled-p :initform t :initarg :enabled-p)))
-
-
-(defmethod node-enabled-p ((this enableable-node))
-  (with-slots (enabled-p) this
-    enabled-p))
-
-
-(defun enable-node (node)
-  (with-slots (enabled-p) node
-    (setf enabled-p t)))
-
-
-(defun disable-node (node)
-  (with-slots (enabled-p) node
-    (setf enabled-p nil)))

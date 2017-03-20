@@ -1,6 +1,6 @@
 
-(:BRF 1) 
-(:MESH) 
+(:BRF 1)
+(:MESH :NAME "Sphere.0")
 ("Sphere.0" :TRANSFORM
  (1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 -1.0 0.0 0.0 0.0 0.0 0.0 1.0) :ARRAYS
  ((0
@@ -2941,10 +2941,10 @@
  :BONES
  (("Sphere.0.bone.1" :INDEX 1 :BONE "Bone" :OFFSET
    (1.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 -1.0 0.0 0.0 0.0 0.0 0.0 1.0))))
-(:SKELETON) 
+(:SKELETON :NAME "Bone")
 (("Bone" :TRANSFORM
   (1.0 0.0 0.0 0.0 0.0 0.0 -1.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 1.0)))
-(:ANIMATION) 
+(:ANIMATION :NAME ".animation.0")
 (".animation.0"
  ((".animation.0.Bone.sequence" :BONE "Bone")
   (0.0d0 (0.70710677 0.70710677 0.0 0.0) (0.0 0.0 0.0) (1.0 1.0 1.0))
