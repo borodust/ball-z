@@ -30,9 +30,9 @@
 
 (defun %cache-transform (cam)
   (with-slots (transform circle-angle pitch-angle) cam
-    (setf transform (mult (euler-axis->mat4 #f pitch-angle (vec3 1.0 0.0 0.0))
+    (setf transform (mult (euler-axis->mat4 pitch-angle (vec3 1.0 0.0 0.0))
                           *camera-translation*
-                          (euler-axis->mat4 #f circle-angle (vec3 0.0 1.0 0.0))))))
+                          (euler-axis->mat4 circle-angle (vec3 0.0 1.0 0.0))))))
 
 
 (defmethod initialize-instance :after ((this player-camera-node) &key)

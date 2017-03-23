@@ -6,7 +6,7 @@
 
 (defun resource-truename (relative-path)
   (fad:merge-pathnames-as-file
-   (merge-working-pathname (property :assets "resources/"))
+   (merge-working-pathname (property :assets "assets/"))
    relative-path))
 
 

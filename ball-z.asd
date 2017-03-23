@@ -12,25 +12,26 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (log4cl cl-bodge cl-fad bordeaux-threads)
+  :depends-on (log4cl cl-bodge cl-fad)
+  :pathname "src/"
   :serial t
   :components ((:file "packages")
                (:file "utils")
                (:file "metrics")
                (:file "events")
-               (:file "debug")
-               (:file "start-screen")
-               (:file "hud")
-               (:file "camera")
                (:file "chain-registry")
                (:file "context")
-               (:file "audio")
-               (:module models
+               (:file "background-audio")
+               (:file "ball-audio")
+               (:file "ball-body")
+               (:module nodes
                         :serial t
-                        :components ((:file "ball-mesh")
-                                     (:file "ball-audio")
-                                     (:file "ball-body")
-                                     (:file "ball")
+                        :components ((:file "hud")
+                                     (:file "camera")
+                                     (:file "debug")
+                                     (:file "start-screen")
+                                     (:file "ball-mesh")
+                                     (:file "ball-model")
                                      (:file "stage")))
                (:file "scene")
                (:file "system")))
