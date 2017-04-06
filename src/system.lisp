@@ -37,7 +37,7 @@
 
     (run (>> (-> ((host)) ()
                (setf (viewport-title) "Ball-Z")
-               #++(lock-cursor))
+               (lock-cursor))
              (-> ((physics)) ()
                (setf (gravity) (vec3 0.0 -9.81 0.0)))))
 

@@ -35,3 +35,13 @@
                                      (:file "stage")))
                (:file "scene")
                (:file "system")))
+
+
+(defsystem ball-z/distrib
+  :description "Ball-Z distribution"
+  :version "0.0.0"
+  :author "Pavel Korolev"
+  :mailto "dev@borodust.org"
+  :license "MIT"
+  :depends-on (cl-bodge/distribution)
+  :components ((:file "distribution")))
