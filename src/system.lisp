@@ -9,8 +9,7 @@
   (:default-initargs :depends-on '(host-system
                                    graphics-system
                                    physics-system
-                                   audio-system
-                                   asset-system)))
+                                   audio-system)))
 
 
 (definline ball-z ()
@@ -31,9 +30,8 @@
                           'game-loaded-event
                           'game-started-event
                           'game-ended-event)
-  (register-asset-loader (asset-registry-of (assets))
-                         (make-resource-loader (resource-truename "models/ball.brf")
-                                               (resource-truename "fonts/fonts.brf")))
+  (register-resource-loader (make-resource-loader (resource-truename "models/ball.brf")
+                                                  (resource-truename "fonts/fonts.brf")))
 
     (run (>> (-> ((host)) ()
                (setf (viewport-title) "Ball-Z")

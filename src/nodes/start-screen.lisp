@@ -10,7 +10,7 @@
 (defmethod initialization-flow ((this start-screen-node) &key)
   (with-slots (anatolian-renderer canvas image-paint) this
     (>> (call-next-method)
-        (asset-flow (font-asset-id "Anatolian.ttf"))
+        (resource-flow (font-asset-id "Anatolian.ttf"))
         (-> ((graphics)) (anatolian-font)
           ;; fixme: load thru assets
           (let ((banner (load-png-image (resource-truename "images/ball-z.png"))))

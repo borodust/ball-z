@@ -19,9 +19,9 @@
 
 
 (define-destructor ball-audio (shared-pop shared-strike shared-fail)
-  (release-resource shared-pop)
-  (release-resource shared-strike)
-  (release-resource shared-fail))
+  (release-shared-resource shared-pop)
+  (release-shared-resource shared-strike)
+  (release-shared-resource shared-fail))
 
 
 (defun %make-shared-audio-source (path)
@@ -38,9 +38,9 @@
       (setf shared-pop (%make-shared-audio-source "sounds/ball-pop.ogg")
             shared-strike (%make-shared-audio-source "sounds/ball-explosion.ogg")
             shared-fail (%make-shared-audio-source "sounds/strike-fail.ogg")))
-    (setf pop (acquire-resource shared-pop)
-          strike (acquire-resource shared-strike)
-          fail (acquire-resource shared-fail))))
+    (setf pop (acquire-shared-resource shared-pop)
+          strike (acquire-shared-resource shared-strike)
+          fail (acquire-shared-resource shared-fail))))
 
 
 (defun play-pop-sound (ball-audio)

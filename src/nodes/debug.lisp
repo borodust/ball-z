@@ -10,7 +10,7 @@
 (defmethod initialization-flow ((this debug-node) &key)
   (with-slots (5by7-renderer) this
     (>> (call-next-method)
-        (asset-flow (font-asset-id "5by7.ttf"))
+        (resource-flow (font-asset-id "5by7.ttf"))
         (-> ((graphics)) (5by7-font)
           (setf 5by7-renderer (make-text-renderer 640 480 5by7-font 18))))))
 

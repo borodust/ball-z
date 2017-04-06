@@ -25,14 +25,14 @@
 (defgeneric dispose-resource (resource obj))
 
 
-(defgeneric acquire-resource (resource)
+(defgeneric acquire-shared-resource (resource)
   (:method ((resource shared-resource))
     (with-slots (count resource) resource
       (incf count)
       resource)))
 
 
-(defgeneric release-resource (resource)
+(defgeneric release-shared-resource (resource)
   (:method ((this shared-resource))
     (with-slots (count resource) this
       (decf count)

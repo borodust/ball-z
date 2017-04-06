@@ -11,7 +11,7 @@
 (defmethod initialization-flow ((this ball-mesh) &key)
   (with-slots (transform (m mesh)) this
     (>> (call-next-method)
-        (asset-flow "Sphere.0")
+        (resource-flow "Sphere.0")
         (-> ((graphics)) (mesh)
           (setf m (mesh-asset-mesh mesh)
                 transform (mesh-asset-transform mesh))))))
