@@ -263,7 +263,8 @@
 
 (defun start (configuration-pathname)
   (log:config :sane2)
-  (startup configuration-pathname))
+  (startup configuration-pathname (fad:pathname-directory-pathname
+                                   configuration-pathname)))
 
 
 (defun main (args)
